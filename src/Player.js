@@ -33,6 +33,7 @@ export class Player {
   reset(spawn) {
     this.camera.position.copy(spawn);
     this.camera.position.y = this.eyeHeight;
+    this.camera.rotation.set(0, 0, 0);
     this.vel.set(0, 0, 0);
     this.health = this.maxHealth;
     this.alive = true;

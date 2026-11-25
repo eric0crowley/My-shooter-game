@@ -22,6 +22,9 @@ export class Weapon {
     this.triggerDown = false;
     this.firedThisPress = false;
     this.onHit = null;
+    this.onEnemyHit = null;
+    this.onShot = null;
+    this.onReload = null;
 
     this.raycaster = new THREE.Raycaster();
     this.view = new THREE.Group();
@@ -70,6 +73,7 @@ export class Weapon {
     const w = this.current;
     if (w.reloading || w.ammo === w.mag) return;
     w.reloading = true;
+    if (this.onReload) this.onReload(w.id);
     window.clearTimeout(w.reloadTimer);
     w.reloadTimer = window.setTimeout(() => {
       w.ammo = w.mag;
@@ -125,6 +129,7 @@ export class Weapon {
     w.cooldown = w.fireRate;
     this.flashTime = 0.05;
     this.view.position.z = 0.06; // recoil kick
+    if (this.onShot) this.onShot(w.id);
 
     this.camera.updateMatrixWorld();
     const origin = new THREE.Vector3();
@@ -157,7 +162,9 @@ export class Weapon {
         if (hit.object.userData && hit.object.userData.part === 'head') dmg *= 2;
         const group = hit.object.parent;
         if (group && group.userData && group.userData.enemy) {
-          group.userData.enemy.takeDamage(dmg);
+          const enemy = group.userData.enemy;
+          enemy.takeDamage(dmg);
+          if (this.onEnemyHit) this.onEnemyHit(enemy, dmg, hit.point);
           hitSomething = true;
         }
       }

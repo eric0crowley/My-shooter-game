@@ -34,6 +34,7 @@ export class Enemy {
     this.scene = scene;
     this.manager = manager;
     this.kind = kind;
+    this.netId = null;
     this.radius = kind === 'zombie' ? 0.48 : 0.5;
     this.alive = true;
     this.health = 100;
@@ -164,7 +165,7 @@ export class Enemy {
     from.z = best.z;
   }
 
-  update(dt, player, colliders, bounds) {
+  animate(dt) {
     if (!this.alive) return;
     this.animationTime += dt;
     if (this.kind === 'zombie' && this.leftArm) {
@@ -172,12 +173,33 @@ export class Enemy {
       this.rightArm.rotation.z = 0.75 + Math.sin(this.animationTime * 5.2 + 1.2) * 0.14;
       this.group.position.y = Math.sin(this.animationTime * 5.2) * 0.025;
     }
+  }
 
-    const target = player.camera.position;
+  update(dt, player, colliders, bounds) {
+    if (!this.alive) return;
+    this.animate(dt);
+
+    const candidates = Array.isArray(player) ? player : [player];
+    let targetPlayer = null;
+    let target = null;
+    let distance = Infinity;
     const from = this.group.position;
+    for (const candidate of candidates) {
+      if (!candidate?.camera?.position || candidate.alive === false) continue;
+      const candidateDistance = Math.hypot(
+        candidate.camera.position.x - from.x,
+        candidate.camera.position.z - from.z
+      );
+      if (candidateDistance < distance) {
+        targetPlayer = candidate;
+        target = candidate.camera.position;
+        distance = candidateDistance;
+      }
+    }
+    if (!targetPlayer) return;
+
     const dx = target.x - from.x;
     const dz = target.z - from.z;
-    const distance = Math.hypot(dx, dz);
     this.group.rotation.y = Math.atan2(dx, dz);
     this.attackCooldown -= dt;
     if (distance > this.detectRange) return;
@@ -193,7 +215,7 @@ export class Enemy {
       this.attackCooldown = this.attackRate;
       const hit = Math.random() < this.hitChance;
       this.manager.spawnTracer(from, target, hit);
-      if (hit) player.damage(this.damage);
+      if (hit) targetPlayer.damage(this.damage);
       return;
     }
 
@@ -202,7 +224,7 @@ export class Enemy {
     if (updatedDistance > this.attackRange || this.attackCooldown > 0 || !canSeeTarget) return;
 
     this.attackCooldown = this.attackRate;
-    player.damage(this.damage);
+    targetPlayer.damage(this.damage);
   }
 }
 
@@ -223,6 +245,16 @@ export class EnemyManager {
     this.spawnCooldown = 0;
     this.elapsed = 0;
     this.tracers = [];
+    this.nextNetId = 1;
+    this.networkClient = false;
+    this.onKillEvent = null;
+    this.onWaveStart = null;
+  }
+
+  registerEnemy(enemy) {
+    enemy.netId = this.nextNetId++;
+    this.enemies.push(enemy);
+    return enemy;
   }
 
   get aliveCount() {
@@ -262,13 +294,15 @@ export class EnemyManager {
     this.elapsed = 0;
     this.wave = 0;
     this.waveQueue = 0;
+    this.nextNetId = 1;
+    this.networkClient = false;
     this.waveIntermission = 0;
     this.spawnCooldown = 0;
 
     if (this.mode === 'training') {
       for (let i = 0; i < 6; i++) {
         const spawn = this.spawns[i % this.spawns.length];
-        this.enemies.push(new Enemy(this.scene, spawn, this, 'bot'));
+        this.registerEnemy(new Enemy(this.scene, spawn, this, 'bot'));
       }
       return;
     }
@@ -279,6 +313,7 @@ export class EnemyManager {
   beginWave(wave) {
     const plan = zombieWavePlan(wave);
     this.wave = wave;
+    if (this.onWaveStart) this.onWaveStart(wave);
     this.waveQueue = plan.count;
     this.maxZombiesAlive = plan.maxAlive;
     this.spawnCooldown = 0.25;
@@ -292,11 +327,11 @@ export class EnemyManager {
 
   spawnZombie(player) {
     const plan = zombieWavePlan(this.wave);
-    const spawn = this.chooseSpawn(player.camera.position);
+    const target = Array.isArray(player) ? player[0] : player;
+    const spawn = this.chooseSpawn(target.camera.position);
     let zombie = this.enemies.find((enemy) => enemy.kind === 'zombie' && !enemy.alive);
     if (!zombie) {
-      zombie = new Enemy(this.scene, spawn, this, 'zombie', plan);
-      this.enemies.push(zombie);
+      zombie = this.registerEnemy(new Enemy(this.scene, spawn, this, 'zombie', plan));
     } else {
       zombie.spawnAt(spawn, plan);
     }
@@ -304,13 +339,95 @@ export class EnemyManager {
   }
 
   onKill(enemy) {
+    if (this.networkClient) return;
     this.score++;
     this.kills++;
+    if (this.onKillEvent) this.onKillEvent(enemy);
     if (this.mode === 'training') {
       enemy.respawnAt = this.elapsed + 1.5 + Math.random() * 1.5;
     } else {
       enemy.respawnAt = null;
     }
+  }
+
+  getNetworkState() {
+    return {
+      mode: this.mode,
+      wave: this.wave,
+      waveQueue: this.waveQueue,
+      waveIntermission: this.waveIntermission,
+      kills: this.kills,
+      enemies: this.enemies.map((enemy) => ({
+        id: enemy.netId,
+        kind: enemy.kind,
+        x: enemy.group.position.x,
+        y: enemy.group.position.y,
+        z: enemy.group.position.z,
+        yaw: enemy.group.rotation.y,
+        health: enemy.health,
+        maxHealth: enemy.maxHealth,
+        alive: enemy.alive,
+        animationTime: enemy.animationTime,
+        speed: enemy.speed,
+      })),
+    };
+  }
+
+  applyNetworkState(state) {
+    if (!state || !Array.isArray(state.enemies)) return;
+    this.mode = state.mode === 'zombie' ? 'zombie' : 'training';
+    this.wave = Math.max(0, Math.floor(Number(state.wave) || 0));
+    this.waveQueue = Math.max(0, Math.floor(Number(state.waveQueue) || 0));
+    this.waveIntermission = Math.max(0, Number(state.waveIntermission) || 0);
+    this.kills = Math.max(0, Math.floor(Number(state.kills) || 0));
+    this.score = this.kills;
+
+    const receivedIds = new Set();
+    let highestId = 0;
+    for (const remote of state.enemies) {
+      const id = Number(remote?.id);
+      const x = Number(remote?.x);
+      const y = Number(remote?.y);
+      const z = Number(remote?.z);
+      if (!Number.isInteger(id) || id < 1 || ![x, y, z].every(Number.isFinite)) continue;
+      const kind = remote.kind === 'zombie' ? 'zombie' : 'bot';
+      const maxHealth = Math.max(1, Number(remote.maxHealth) || 100);
+      let enemy = this.enemies.find((candidate) => candidate.netId === id);
+      if (!enemy) {
+        enemy = new Enemy(this.scene, new THREE.Vector3(x, y, z), this, kind, {
+          health: maxHealth,
+          speed: Math.max(0, Number(remote.speed) || 0),
+        });
+        enemy.netId = id;
+        this.enemies.push(enemy);
+      }
+
+      const alive = remote.alive === true;
+      if (alive && !enemy.alive) {
+        enemy.spawnAt(new THREE.Vector3(x, y, z), {
+          health: maxHealth,
+          speed: Math.max(0, Number(remote.speed) || enemy.speed),
+        });
+      }
+      enemy.alive = alive;
+      enemy.group.visible = alive;
+      enemy.group.position.set(x, y, z);
+      enemy.group.rotation.y = Number.isFinite(Number(remote.yaw)) ? Number(remote.yaw) : 0;
+      enemy.maxHealth = maxHealth;
+      enemy.health = Math.max(0, Math.min(maxHealth, Number(remote.health) || 0));
+      if (Number.isFinite(Number(remote.animationTime))) enemy.animationTime = Number(remote.animationTime);
+      enemy.respawnAt = null;
+      receivedIds.add(id);
+      highestId = Math.max(highestId, id);
+    }
+
+    for (const enemy of this.enemies) {
+      if (!receivedIds.has(enemy.netId)) {
+        enemy.alive = false;
+        enemy.group.visible = false;
+      }
+    }
+    this.nextNetId = Math.max(this.nextNetId, highestId + 1);
   }
 
   spawnTracer(from, to, hit = true) {
@@ -332,27 +449,31 @@ export class EnemyManager {
 
   update(dt, player) {
     this.elapsed += dt;
-    for (const enemy of this.enemies) enemy.update(dt, player, this.colliders, this.bounds);
+    if (this.networkClient) {
+      for (const enemy of this.enemies) enemy.animate(dt);
+    } else {
+      for (const enemy of this.enemies) enemy.update(dt, player, this.colliders, this.bounds);
 
-    if (this.mode === 'training') {
-      for (const enemy of this.enemies) {
-        if (!enemy.alive && enemy.respawnAt !== null && this.elapsed >= enemy.respawnAt) {
-          const spawn = this.spawns[Math.floor(Math.random() * this.spawns.length)];
-          enemy.spawnAt(spawn);
+      if (this.mode === 'training') {
+        for (const enemy of this.enemies) {
+          if (!enemy.alive && enemy.respawnAt !== null && this.elapsed >= enemy.respawnAt) {
+            const spawn = this.spawns[Math.floor(Math.random() * this.spawns.length)];
+            enemy.spawnAt(spawn);
+          }
         }
-      }
-    } else if (this.mode === 'zombie') {
-      if (this.waveIntermission > 0) {
-        this.waveIntermission = Math.max(0, this.waveIntermission - dt);
-        if (this.waveIntermission === 0) this.beginWave(this.wave + 1);
-      } else if (this.waveQueue > 0 && this.aliveCount < this.maxZombiesAlive) {
-        this.spawnCooldown -= dt;
-        if (this.spawnCooldown <= 0) {
-          this.spawnZombie(player);
-          this.spawnCooldown = 0.82;
+      } else if (this.mode === 'zombie') {
+        if (this.waveIntermission > 0) {
+          this.waveIntermission = Math.max(0, this.waveIntermission - dt);
+          if (this.waveIntermission === 0) this.beginWave(this.wave + 1);
+        } else if (this.waveQueue > 0 && this.aliveCount < this.maxZombiesAlive) {
+          this.spawnCooldown -= dt;
+          if (this.spawnCooldown <= 0) {
+            this.spawnZombie(player);
+            this.spawnCooldown = 0.82;
+          }
+        } else if (this.waveQueue === 0 && this.aliveCount === 0) {
+          this.waveIntermission = 4;
         }
-      } else if (this.waveQueue === 0 && this.aliveCount === 0) {
-        this.waveIntermission = 4;
       }
     }
 

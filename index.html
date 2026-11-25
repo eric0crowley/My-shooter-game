@@ -86,7 +86,7 @@
         <span class="panel-kicker"><i></i> میدان تمرین · نسخهٔ آزمایشی</span>
         <h1>RAGE <em>OF FIGHT</em></h1>
         <p class="panel-lead">تمرین کن، بجنگ و تا جای ممکن زنده بمان.</p>
-        <p class="panel-copy">یک شوتر اول‌شخص آفلاین با کنترل لمسی، سلاح‌های متنوع و موج‌های زامبی.</p>
+        <p class="panel-copy">تمرین و بقا به‌صورت آفلاین؛ یا بازی گروهی با گوشی‌های دیگر در شبکهٔ محلی.</p>
 
         <div class="mode-grid" aria-label="انتخاب حالت بازی">
           <button id="start-training-btn" class="mode-card" type="button">
@@ -103,10 +103,14 @@
           </button>
         </div>
 
-        <div class="lan-roadmap" aria-label="شبکه محلی">
+        <div class="lan-roadmap" aria-label="بازی گروهی در شبکه محلی">
           <span class="lan-mark" aria-hidden="true">⌁</span>
-          <span><strong>شبکهٔ محلی</strong><small>میزبان و پیوستن گوشی‌ها · در مرحلهٔ بعد</small></span>
-          <span class="roadmap-tag">در حال توسعه</span>
+          <span><strong>بازی گروهی در شبکهٔ محلی</strong><small>بدون اینترنت؛ هر دو گوشی به یک وای‌فای وصل باشند.</small></span>
+          <span class="roadmap-tag">آزمایشی</span>
+        </div>
+        <div class="lan-actions">
+          <button id="lan-host-btn" class="secondary-button" type="button">میزبانی بازی</button>
+          <button id="lan-join-btn" class="secondary-button" type="button">پیوستن به میزبان</button>
         </div>
 
         <ul class="controls">
@@ -117,6 +121,38 @@
           <li>جعبه‌های سبز سلامتی و جعبه‌های زرد مهمات می‌دهند</li>
         </ul>
         <span class="panel-footnote">نسخهٔ آزمایشی · بدون نیاز به اینترنت</span>
+      </div>
+    </section>
+
+    <section id="lan-screen" class="overlay" style="display: none">
+      <div class="panel lan-panel">
+        <span class="panel-kicker"><i></i> شبکهٔ محلی · آزمایشی</span>
+        <h2>بازی گروهی</h2>
+        <p class="lan-intro">هر دو گوشی باید به یک وای‌فای وصل باشند؛ اینترنت لازم نیست.</p>
+        <p id="lan-status" class="lan-status" role="status">در حال آماده‌سازی اتصال…</p>
+
+        <div id="lan-host-setup" hidden>
+          <p class="lan-help">این نشانی را روی گوشی مهمان وارد کن:</p>
+          <div class="lan-address-row">
+            <code id="lan-address-value" dir="ltr">—</code>
+            <button id="lan-copy-address" class="secondary-button" type="button">کپی</button>
+          </div>
+          <p class="lan-help">حالت بازی</p>
+          <div class="lan-mode-picker" role="group" aria-label="حالت بازی شبکه‌ای">
+            <button class="lan-mode-choice" data-lan-mode="training" type="button">تمرین با ربات</button>
+            <button class="lan-mode-choice selected" data-lan-mode="zombie" type="button">بقای زامبی</button>
+          </div>
+          <div id="lan-player-list" class="lan-player-list" aria-live="polite"></div>
+          <button id="lan-start-match-btn" class="primary-button" type="button" disabled>شروع بازی</button>
+        </div>
+
+        <div id="lan-join-setup" hidden>
+          <label class="lan-input-label" for="lan-host-input">نشانی IP گوشی میزبان</label>
+          <input id="lan-host-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" dir="ltr" placeholder="مثلاً ۱۹۲.۱۶۸.۱.۱۰" />
+          <button id="lan-connect-btn" class="primary-button" type="button">اتصال</button>
+        </div>
+
+        <button id="lan-back-btn" class="secondary-button" type="button">بازگشت</button>
       </div>
     </section>
 

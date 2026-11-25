@@ -33,7 +33,9 @@ export class HUD {
     this.scoreEl.textContent = formatNumber(stats.kills);
 
     const isZombie = stats.mode === 'zombie';
-    this.modeEl.textContent = isZombie ? 'بقا · آفلاین' : 'تمرینی · آفلاین';
+    this.modeEl.textContent = stats.online
+      ? `${isZombie ? 'بقا' : 'تمرینی'} · شبکهٔ محلی`
+      : (isZombie ? 'بقا · آفلاین' : 'تمرینی · آفلاین');
     this.wavePanel.style.display = isZombie ? 'grid' : 'none';
     if (isZombie) {
       this.waveValue.textContent = formatNumber(stats.wave);
