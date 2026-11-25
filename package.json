@@ -1,0 +1,22 @@
+{
+  "name": "rage-of-fight",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Original first-person shooter game built with Three.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "node --test",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
+    "vite": "^8.3.8"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "three": "^0.160.0"
+  }
+}

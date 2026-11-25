@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#090e13" />
+    <meta name="description" content="Rage of Fight — شوتر اول‌شخص فارسی برای تمرین و بقا." />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Rage of Fight — شوتر اول‌شخص</title>
+    <link rel="icon" type="image/png" href="./rage-of-fight-icon.png" />
+    <link rel="apple-touch-icon" href="./rage-of-fight-icon.png" />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <canvas id="game" aria-label="محیط بازی Rage of Fight"></canvas>
+    <div id="damage-vignette" aria-hidden="true"></div>
+
+    <div id="hud">
+      <div id="crosshair" aria-hidden="true"><span></span></div>
+      <div id="hitmarker" aria-hidden="true">×</div>
+
+      <div id="top-bar" class="hud-panel">
+        <div class="score-block">
+          <span class="hud-eyebrow">حذف</span>
+          <strong id="score">۰</strong>
+        </div>
+        <span class="hud-divider" aria-hidden="true"></span>
+        <span id="mode-label" class="arena-status">تمرینی · آفلاین</span>
+        <div id="wave-panel" class="wave-block" style="display: none">
+          <span class="hud-eyebrow">موج</span>
+          <strong id="wave-value">۱</strong>
+          <small id="wave-hint">زامبی باقی‌مانده</small>
+        </div>
+        <button id="pause-btn" type="button" aria-label="توقف بازی" title="توقف بازی">Ⅱ</button>
+      </div>
+
+      <section id="bottom-left" class="hud-panel" aria-label="وضعیت سلامتی">
+        <div class="meter-heading">
+          <span class="hud-eyebrow">سلامتی</span>
+          <strong><span id="health-value">۱۰۰</span><small> / ۱۰۰</small></strong>
+        </div>
+        <div id="health-bar"><div id="health-fill"></div></div>
+      </section>
+
+      <section id="bottom-right" class="hud-panel" aria-label="وضعیت سلاح">
+        <div class="weapon-copy">
+          <span class="hud-eyebrow">سلاح فعال</span>
+          <strong id="weapon-name">تفنگ تهاجمی</strong>
+        </div>
+        <div class="ammo-copy">
+          <strong id="ammo">۳۰ <small>/ ۳۰</small></strong>
+          <span class="hud-eyebrow">مهمات</span>
+        </div>
+        <span class="weapon-hint">R شارژ · ۱ / ۲ / ۳ تعویض سلاح</span>
+      </section>
+    </div>
+
+    <div id="touch-controls" aria-label="کنترل‌های لمسی">
+      <div id="move-pad" class="virtual-stick" aria-label="برای حرکت انگشت را بکش">
+        <div class="stick-base"><div id="move-knob" class="stick-knob"></div></div>
+        <span class="stick-caption">حرکت</span>
+      </div>
+      <div class="touch-actions">
+        <div class="action-row">
+          <button id="touch-reload" class="touch-action" type="button" aria-label="تعویض خشاب">
+            <span>↻</span><small>خشاب</small>
+          </button>
+          <button id="touch-switch" class="touch-action" type="button" aria-label="تعویض سلاح">
+            <span>⇄</span><small>سلاح</small>
+          </button>
+          <button id="touch-jump" class="touch-action" type="button" aria-label="پرش">
+            <span>↑</span><small>پرش</small>
+          </button>
+        </div>
+        <button id="touch-fire" class="fire-button" type="button" aria-label="برای شلیک نگه دار">
+          <span>شلیک</span><small>نگه‌دار</small>
+        </button>
+      </div>
+    </div>
+
+    <section id="start-screen" class="overlay">
+      <div class="panel menu-panel">
+        <span class="panel-kicker"><i></i> میدان تمرین · نسخهٔ آزمایشی</span>
+        <h1>RAGE <em>OF FIGHT</em></h1>
+        <p class="panel-lead">تمرین کن، بجنگ و تا جای ممکن زنده بمان.</p>
+        <p class="panel-copy">یک شوتر اول‌شخص آفلاین با کنترل لمسی، سلاح‌های متنوع و موج‌های زامبی.</p>
+
+        <div class="mode-grid" aria-label="انتخاب حالت بازی">
+          <button id="start-training-btn" class="mode-card" type="button">
+            <span class="mode-icon" aria-hidden="true">◎</span>
+            <strong>تمرین با ربات</strong>
+            <small>نشانه‌گیری و تیراندازی؛ ربات‌ها دوباره ظاهر می‌شوند.</small>
+            <span class="mode-action">شروع تمرین <b>←</b></span>
+          </button>
+          <button id="start-zombie-btn" class="mode-card zombie-card" type="button">
+            <span class="mode-icon" aria-hidden="true">☣</span>
+            <strong>بقای زامبی</strong>
+            <small>موج‌ها را پاک‌سازی کن؛ هر موج دشوارتر می‌شود.</small>
+            <span class="mode-action">شروع بقا <b>←</b></span>
+          </button>
+        </div>
+
+        <div class="lan-roadmap" aria-label="شبکه محلی">
+          <span class="lan-mark" aria-hidden="true">⌁</span>
+          <span><strong>شبکهٔ محلی</strong><small>میزبان و پیوستن گوشی‌ها · در مرحلهٔ بعد</small></span>
+          <span class="roadmap-tag">در حال توسعه</span>
+        </div>
+
+        <ul class="controls">
+          <li class="desktop-only">WASD حرکت · ماوس نشانه‌گیری · کلیک چپ شلیک</li>
+          <li class="desktop-only">Space پرش · R تعویض خشاب · ۱ / ۲ / ۳ تعویض سلاح</li>
+          <li class="touch-only">جوی‌استیک چپ برای حرکت · سمت راست صفحه را بکش تا نشانه بگیری</li>
+          <li class="touch-only">دکمهٔ شلیک را نگه‌دار · دکمه‌های خشاب، سلاح و پرش</li>
+          <li>جعبه‌های سبز سلامتی و جعبه‌های زرد مهمات می‌دهند</li>
+        </ul>
+        <span class="panel-footnote">نسخهٔ آزمایشی · بدون نیاز به اینترنت</span>
+      </div>
+    </section>
+
+    <section id="pause-screen" class="overlay" style="display: none">
+      <div class="panel compact-panel">
+        <span class="panel-kicker">مکث</span>
+        <h2>بازی متوقف شد</h2>
+        <p id="pause-copy">برای ادامه، دکمهٔ ادامه را بزن.</p>
+        <button id="resume-btn" class="primary-button" type="button">ادامهٔ بازی</button>
+        <button id="pause-menu-btn" class="secondary-button" type="button">بازگشت به منو</button>
+      </div>
+    </section>
+
+    <section id="game-over" class="overlay" style="display: none">
+      <div class="panel compact-panel">
+        <span class="panel-kicker">پایان دور</span>
+        <h2>پایان بازی</h2>
+        <p>عملکرد این دور</p>
+        <strong class="final-score"><span id="final-score">۰</span><small id="final-label">حذف</small></strong>
+        <p id="final-wave-row" class="final-wave" style="display: none">بالاترین موج: <strong id="final-wave">۱</strong></p>
+        <button id="restart-btn" class="primary-button" type="button">شروع دوباره</button>
+        <button id="game-over-menu-btn" class="secondary-button" type="button">بازگشت به منو</button>
+      </div>
+    </section>
+
+    <div id="error" role="alert"></div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

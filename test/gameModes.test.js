@@ -1,0 +1,90 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as THREE from 'three';
+import { Enemy, zombieWavePlan } from '../src/EnemyManager.js';
+
+test('first zombie wave is small enough for the starter arena', () => {
+  assert.deepEqual(zombieWavePlan(1), {
+    count: 7,
+    maxAlive: 6,
+    health: 72,
+    speed: 2.55,
+    damage: 12,
+    attackRate: 1.15,
+  });
+});
+
+test('later waves scale up but keep mobile-safe caps', () => {
+  const plan = zombieWavePlan(100);
+  assert.equal(plan.count, 36);
+  assert.equal(plan.maxAlive, 10);
+  assert.equal(plan.speed, 3.8);
+  assert.equal(plan.damage, 28);
+  assert.equal(plan.attackRate, 0.62);
+  assert.ok(plan.health > zombieWavePlan(1).health);
+});
+
+test('invalid wave numbers are normalized to wave one', () => {
+  assert.deepEqual(zombieWavePlan(0), zombieWavePlan(1));
+  assert.deepEqual(zombieWavePlan(Number.NaN), zombieWavePlan(1));
+});
+
+test('training bots fire visible ranged shots and can hit at shooting distance', () => {
+  const scene = new THREE.Scene();
+  const shots = [];
+  const manager = {
+    onKill() {},
+    spawnTracer: (...args) => shots.push(args),
+  };
+  const bot = new Enemy(scene, new THREE.Vector3(0, 0, 0), manager, 'bot');
+  const player = {
+    camera: { position: new THREE.Vector3(0, 1.7, 10) },
+    health: 100,
+    damage(amount) { this.health -= amount; },
+  };
+  bot.attackCooldown = 0;
+  const originalRandom = Math.random;
+  try {
+    Math.random = () => 0.2;
+    bot.update(0.016, player, [], 30);
+  } finally {
+    Math.random = originalRandom;
+  }
+
+  assert.equal(player.health, 92);
+  assert.equal(shots.length, 1);
+  assert.equal(shots[0][2], true);
+  assert.equal(bot.group.position.z, 0, 'the bot holds a clear firing lane');
+});
+
+test('training bots miss some shots and cannot shoot through arena cover', () => {
+  const scene = new THREE.Scene();
+  const shots = [];
+  const manager = {
+    onKill() {},
+    spawnTracer: (...args) => shots.push(args),
+  };
+  const bot = new Enemy(scene, new THREE.Vector3(0, 0, 0), manager, 'bot');
+  const player = {
+    camera: { position: new THREE.Vector3(0, 1.7, 10) },
+    health: 100,
+    damage(amount) { this.health -= amount; },
+  };
+  bot.attackCooldown = 0;
+  const originalRandom = Math.random;
+  try {
+    Math.random = () => 0.9;
+    bot.update(0.016, player, [], 30);
+  } finally {
+    Math.random = originalRandom;
+  }
+  assert.equal(player.health, 100);
+  assert.equal(shots.length, 1);
+  assert.equal(shots[0][2], false);
+
+  bot.attackCooldown = 0;
+  const wall = { minX: -2, maxX: 2, minZ: 4, maxZ: 6 };
+  bot.update(0.016, player, [wall], 30);
+  assert.equal(player.health, 100);
+  assert.equal(shots.length, 1);
+});
