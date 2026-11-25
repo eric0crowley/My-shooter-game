@@ -1,0 +1,24 @@
+# Local dependencies and build output
+node_modules/
+dist/
+
+# Capacitor / Android local machine artifacts
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/
+
+# User-provided APKs and extracted IL2CPP metadata stay local, not in Git
+google_drive/
+*.apk
+*.aab
+dump.cs
+il2cpp.h
+script.json
+stringliteral.json
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
+*.log
