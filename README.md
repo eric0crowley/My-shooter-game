@@ -1,5 +1,7 @@
 # Rage of Fight
 
+> **تفکیک پروژه‌ها:** برنامهٔ ریشهٔ مخزن یک پروتوتایپ مستقل با **Three.js + Vite + Capacitor** است؛ پروژهٔ Unity بازسازی‌شده از APK اصلی در `unity-reconstruction/` قرار دارد. این دو را با هم اشتباه نگیر.
+
 یک پروتوتایپ شوتر اول‌شخص موبایل‌محور با رابط فارسی، ساخته‌شده با **Three.js + Vite + Capacitor**. این مخزن یک بازی مستقل با کد و هندسهٔ خودش است؛ نام‌ها، دارایی‌ها، نقشه‌ها یا داستان Call of Duty را کپی نمی‌کند. شبه‌کدهای `recovered/apk-beta-native/` سورس قابل‌کامپایل Unity نیستند و در این بازی استفاده نشده‌اند.
 
 ## قابلیت‌ها
@@ -89,3 +91,7 @@ APK محلی در `android/app/build/outputs/apk/debug/app-debug.apk` ساخته
 - `test/gameModes.test.js` — آزمون‌های موج، AI و همگام‌سازی LAN
 
 فایل‌های `recovered/apk-beta-native/` فقط برای بررسی ساختار APK بتا هستند؛ آن‌ها سورس قابل‌کامپایل Unity یا جایگزین سورس این پروتوتایپ نیستند.
+
+## بازسازی پروژهٔ اصلی Unity
+
+پروژهٔ Unity مبتنی بر APK اصلی در [`unity-reconstruction/`](unity-reconstruction/README.md) نگهداری می‌شود. این یک بازسازی دارایی‌ها و metadata است؛ APK با IL2CPP سورس اصلی C# را حفظ نمی‌کند. شبه‌کد native بازیابی‌شده در [`Assets/Recovered/NativePseudocode/`](unity-reconstruction/Assets/Recovered/NativePseudocode/README.md) برای بازرسی است، نه سورس قابل‌کامپایل یا بازی کامل و آزموده‌شده. برای بازکردن، Unity `2022.3.62f1` لازم است؛ دستور ساخت صحنه‌ها در README همان پروژه آمده است.

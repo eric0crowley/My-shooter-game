@@ -1,0 +1,499 @@
+# `ExplosiveObject` — TypeDefIndex 3391
+
+> **Reconstructed pseudocode only; not original C# source.** Synthetic ABI arguments, `ulong` return values, registers, `RuntimeMemory`/`RuntimeCalls` and control-flow labels come from the native lifter. `exact` is not proof of semantic equivalence or compilability. See [`README.md`](../../../README.md).
+
+## Instance fields from metadata
+
+| Offset | Type | Field |
+|---:|---|---|
+| `0x20` | `WeaponEffects` | `WeaponEffectsComponent` |
+| `0x28` | `float` | `hitPoints` |
+| `0x2C` | `float` | `initialHitPoints` |
+| `0x30` | `float` | `explosionDamage` |
+| `0x34` | `float` | `damageDelay` |
+| `0x38` | `float` | `explosionDamageAmt` |
+| `0x3C` | `float` | `blastForce` |
+| `0x40` | `float` | `radius` |
+| `0x44` | `LayerMask` | `blastMask` |
+| `0x48` | `LayerMask` | `obstructionMask` |
+| `0x50` | `Transform` | `myTransform` |
+| `0x58` | `bool` | `detonated` |
+| `0x59` | `bool` | `audioPlayed` |
+| `0x5C` | `int` | `objectPoolIndex` |
+| `0x60` | `AudioSource` | `aSource` |
+| `0x68` | `Collider` | `hitCollider` |
+| `0x70` | `Rigidbody` | `hitRigidbody` |
+
+## `ExplosiveObject.Start` — RVA `0xc95ddc`
+
+- Lift status: **exact**; input span: 228 bytes; span to next metadata RVA: 228 bytes.
+- Metadata signature: `private void Start() { }`
+- Structural verifier: suspect=0, unverifiable=0, unmapped-instructions=32 (informational only).
+
+```csharp
+public static ulong ExplosiveObject_Start_RVAc95ddc(ulong x0, ulong x1, ulong x2, ulong x3, ulong x4, ulong x5, ulong x6, ulong x7)
+    {
+        ulong sp = default(ulong);
+        RuntimeVector128 v0 = default(RuntimeVector128);
+        ulong x19 = default(ulong);
+        ulong x20 = default(ulong);
+        ulong x30 = default(ulong);
+        ulong x8 = default(ulong);
+        RuntimeMemory.WriteU64(unchecked((ulong)((sp) + (0xFFFFFFFFFFFFFFE0UL))), x30);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x0UL))), x20);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x8UL))), x19);
+        x20 = 0x1BAB000UL;
+        x8 = unchecked((ulong)(unchecked((uint)(RuntimeMemory.ReadU8(unchecked((ulong)((x20) + (0x47DUL))))))));
+        x19 = x0;
+        if ((unchecked((uint)((unchecked((uint)(x8))) & (unchecked((uint)((unchecked((uint)0x1UL)) << (int)(unchecked((int)(unchecked((uint)(0x0UL)))))))))) != unchecked((uint)0x0UL)))
+        {
+            goto label_0xC95E20;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x0 = 0x1A8D000UL;
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x0) + (0x248UL))));
+        x0 = RuntimeCalls.InvokeDirect(0xB7D92CUL, x0, x1, x2, x3);
+        x0 = 0x1A8D000UL;
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x0) + (0xCD8UL))));
+        x0 = RuntimeCalls.InvokeDirect(0xB7D92CUL, x0, x1, x2, x3);
+        x0 = 0x1A8D000UL;
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x0) + (0x5A0UL))));
+        x0 = RuntimeCalls.InvokeDirect(0xB7D92CUL, x0, x1, x2, x3);
+        x8 = unchecked((ulong)(unchecked((uint)(0x1UL))));
+        RuntimeMemory.WriteU8(unchecked((ulong)((x20) + (0x47DUL))), unchecked((byte)(unchecked((uint)(x8)))));
+        goto label_0xC95E20;
+        label_0xC95E20:
+        ;
+        x0 = 0x0UL;
+        x0 = RuntimeCalls.InvokeDirect(0x176F8DCUL /* metadata target: Camera.get_main */, x0, x1, x2, x3);
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC95EBC;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x8 = 0x1A8D000UL;
+        x8 = RuntimeMemory.ReadU64(unchecked((ulong)((x8) + (0xCD8UL))));
+        x1 = RuntimeMemory.ReadU64(x8);
+        x0 = RuntimeCalls.InvokeDirect(0xE31BC8UL, x0, x1, x2, x3);
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC95EBC;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x0) + (0x28UL))));
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC95EBC;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x8 = 0x1A8D000UL;
+        x8 = RuntimeMemory.ReadU64(unchecked((ulong)((x8) + (0x5A0UL))));
+        x1 = RuntimeMemory.ReadU64(x8);
+        x0 = RuntimeCalls.InvokeDirect(0xE49224UL, x0, x1, x2, x3);
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC95EBC;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x1 = RuntimeMemory.ReadU64(unchecked((ulong)((x0) + (0x88UL))));
+        x20 = 0x1A8D000UL;
+        x20 = RuntimeMemory.ReadU64(unchecked((ulong)((x20) + (0x248UL))));
+        x0 = x19;
+        RuntimeMemory.WriteU64(unchecked((ulong)((x0) + (0x20UL))), x1);
+        x0 = RuntimeCalls.InvokeDirect(0xB7D8D0UL, x0, x1, x2, x3);
+        x0 = x19;
+        x1 = 0x0UL;
+        x0 = RuntimeCalls.InvokeDirect(0x1792154UL /* metadata target: Component.get_transform */, x0, x1, x2, x3);
+        x1 = x0;
+        x0 = x19;
+        RuntimeMemory.WriteU64(unchecked((ulong)((x0) + (0x50UL))), x1);
+        x0 = RuntimeCalls.InvokeDirect(0xB7D8D0UL, x0, x1, x2, x3);
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x28UL))))), 0));
+        x0 = x19;
+        RuntimeMemory.WriteF32(unchecked((ulong)((x19) + (0x2CUL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0));
+        x1 = RuntimeMemory.ReadU64(x20);
+        x0 = RuntimeCalls.InvokeDirect(0xE31BC8UL, x0, x1, x2, x3);
+        RuntimeMemory.WriteU64(unchecked((ulong)((x19) + (0x60UL))), x0);
+        x1 = x0;
+        x0 = x19;
+        x20 = RuntimeMemory.ReadU64(unchecked((ulong)((sp) + (0x10UL))));
+        x19 = RuntimeMemory.ReadU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x8UL))));
+        x30 = RuntimeMemory.ReadU64(sp);
+        return RuntimeCalls.InvokeDirect(0xB7D8D0UL);
+        label_0xC95EBC:
+        ;
+        x0 = RuntimeCalls.InvokeDirect(0xB7DB74UL, x0, x1, x2, x3);
+        return default(ulong);
+    }
+```
+
+## `ExplosiveObject.Update` — RVA `0xc95ec0`
+
+- Lift status: **exact**; input span: 4 bytes; span to next metadata RVA: 4 bytes.
+- Metadata signature: `private void Update() { }`
+- Structural verifier: suspect=0, unverifiable=0, unmapped-instructions=0 (informational only).
+
+```csharp
+public static ulong ExplosiveObject_Update_RVAc95ec0(ulong x0, ulong x1, ulong x2, ulong x3, ulong x4, ulong x5, ulong x6, ulong x7)
+    {
+        return x0;
+        return default(ulong);
+    }
+```
+
+## `ExplosiveObject.DetectDestroyed` — RVA `0xc95ec4`
+
+- Lift status: **exact**; input span: 108 bytes; span to next metadata RVA: 108 bytes.
+- Metadata signature: `private IEnumerator DetectDestroyed() { }`
+- Structural verifier: suspect=0, unverifiable=0, unmapped-instructions=16 (informational only).
+
+```csharp
+public static ulong ExplosiveObject_DetectDestroyed_RVAc95ec4(ulong x0, ulong x1, ulong x2, ulong x3, ulong x4, ulong x5, ulong x6, ulong x7)
+    {
+        ulong sp = default(ulong);
+        ulong x19 = default(ulong);
+        ulong x20 = default(ulong);
+        ulong x21 = default(ulong);
+        ulong x30 = default(ulong);
+        ulong x8 = default(ulong);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0xFFFFFFFFFFFFFFE0UL)))) + (0x0UL))), x30);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0xFFFFFFFFFFFFFFE0UL)))) + (0x8UL))), x21);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x0UL))), x20);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x8UL))), x19);
+        x20 = 0x1BAB000UL;
+        x21 = 0x1A8E000UL;
+        x8 = unchecked((ulong)(unchecked((uint)(RuntimeMemory.ReadU8(unchecked((ulong)((x20) + (0x47EUL))))))));
+        x21 = RuntimeMemory.ReadU64(unchecked((ulong)((x21) + (0x1A8UL))));
+        x19 = x0;
+        if ((unchecked((uint)((unchecked((uint)(x8))) & (unchecked((uint)((unchecked((uint)0x1UL)) << (int)(unchecked((int)(unchecked((uint)(0x0UL)))))))))) != unchecked((uint)0x0UL)))
+        {
+        }
+        else
+        {
+            x0 = 0x1A8E000UL;
+            x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x0) + (0x1A8UL))));
+            // Likely IL2CPP class initialization helper (guarded call).
+            x0 = RuntimeCalls.InvokeDirect(0xB7D92CUL, x0, x1, x2, x3);
+            x8 = unchecked((ulong)(unchecked((uint)(0x1UL))));
+            RuntimeMemory.WriteU8(unchecked((ulong)((x20) + (0x47EUL))), unchecked((byte)(unchecked((uint)(x8)))));
+        }
+        label_0xC95EF8:
+        ;
+        x0 = RuntimeMemory.ReadU64(x21);
+        x0 = RuntimeCalls.InvokeDirect(0xB7DB70UL, x0, x1, x2, x3);
+        x1 = 0x0UL;
+        x20 = x0;
+        x0 = RuntimeCalls.InvokeDirect(0x1589338UL /* metadata target: Object.ctor */, x0, x1, x2, x3);
+        x0 = x20;
+        RuntimeMemory.WritePtr(unchecked((ulong)((x20) + (0x10UL))), unchecked((ulong)(unchecked((uint)0x0UL))));
+        RuntimeMemory.WriteU64(unchecked((ulong)((x0) + (0x20UL))), x19);
+        x1 = x19;
+        x0 = RuntimeCalls.InvokeDirect(0xB7D8D0UL, x0, x1, x2, x3);
+        x0 = x20;
+        x20 = RuntimeMemory.ReadU64(unchecked((ulong)((sp) + (0x10UL))));
+        x19 = RuntimeMemory.ReadU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x8UL))));
+        x30 = RuntimeMemory.ReadU64(sp);
+        x21 = RuntimeMemory.ReadU64(unchecked((ulong)((sp) + (0x8UL))));
+        return x0;
+        return default(ulong);
+    }
+```
+
+## `ExplosiveObject.ResetExplosiveObject` — RVA `0xc95f58`
+
+- Lift status: **exact**; input span: 108 bytes; span to next metadata RVA: 108 bytes.
+- Metadata signature: `private void ResetExplosiveObject() { }`
+- Structural verifier: suspect=0, unverifiable=0, unmapped-instructions=14 (informational only).
+
+```csharp
+public static ulong ExplosiveObject_ResetExplosiveObject_RVAc95f58(ulong x0, ulong x1, ulong x2, ulong x3, ulong x4, ulong x5, ulong x6, ulong x7)
+    {
+        ulong sp = default(ulong);
+        RuntimeVector128 v0 = default(RuntimeVector128);
+        ulong x19 = default(ulong);
+        ulong x20 = default(ulong);
+        ulong x30 = default(ulong);
+        ulong x8 = default(ulong);
+        RuntimeMemory.WriteU64(unchecked((ulong)((sp) + (0xFFFFFFFFFFFFFFE0UL))), x30);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x0UL))), x20);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x8UL))), x19);
+        x20 = 0x1BAB000UL;
+        x8 = unchecked((ulong)(unchecked((uint)(RuntimeMemory.ReadU8(unchecked((ulong)((x20) + (0x47FUL))))))));
+        x19 = x0;
+        if ((unchecked((uint)((unchecked((uint)(x8))) & (unchecked((uint)((unchecked((uint)0x1UL)) << (int)(unchecked((int)(unchecked((uint)(0x0UL)))))))))) != unchecked((uint)0x0UL)))
+        {
+            goto label_0xC95F84;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x0 = 0x1A8E000UL;
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x0) + (0x198UL))));
+        // Likely IL2CPP class initialization helper (guarded call).
+        x0 = RuntimeCalls.InvokeDirect(0xB7D92CUL, x0, x1, x2, x3);
+        x8 = unchecked((ulong)(unchecked((uint)(0x1UL))));
+        RuntimeMemory.WriteU8(unchecked((ulong)((x20) + (0x47FUL))), unchecked((byte)(unchecked((uint)(x8)))));
+        goto label_0xC95F84;
+        label_0xC95F84:
+        ;
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x2CUL))))), 0));
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x19) + (0x50UL))));
+        RuntimeMemory.WriteU16(unchecked((ulong)((x19) + (0x58UL))), unchecked((ushort)(unchecked((uint)0x0UL))));
+        RuntimeMemory.WriteF32(unchecked((ulong)((x19) + (0x28UL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0));
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC95FC0;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x8 = 0x1A8E000UL;
+        x8 = RuntimeMemory.ReadU64(unchecked((ulong)((x8) + (0x198UL))));
+        x1 = RuntimeMemory.ReadU64(x8);
+        x0 = RuntimeCalls.InvokeDirect(0xE31BC8UL, x0, x1, x2, x3);
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC95FC0;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x20 = RuntimeMemory.ReadU64(unchecked((ulong)((sp) + (0x10UL))));
+        x19 = RuntimeMemory.ReadU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x8UL))));
+        x1 = unchecked((ulong)(unchecked((uint)(0x1UL))));
+        x2 = 0x0UL;
+        x30 = RuntimeMemory.ReadU64(sp);
+        return RuntimeCalls.InvokeDirect(0x17799D0UL /* metadata target: Renderer.set_enabled */);
+        label_0xC95FC0:
+        ;
+        x0 = RuntimeCalls.InvokeDirect(0xB7DB74UL, x0, unchecked((ulong)(unchecked((uint)(x1)))), x2, x3);
+        return default(ulong);
+    }
+```
+
+## `ExplosiveObject.Detonate` — RVA `0xc95fc4`
+
+- Lift status: **exact**; input span: 108 bytes; span to next metadata RVA: 108 bytes.
+- Metadata signature: `private IEnumerator Detonate() { }`
+- Structural verifier: suspect=0, unverifiable=0, unmapped-instructions=16 (informational only).
+
+```csharp
+public static ulong ExplosiveObject_Detonate_RVAc95fc4(ulong x0, ulong x1, ulong x2, ulong x3, ulong x4, ulong x5, ulong x6, ulong x7)
+    {
+        ulong sp = default(ulong);
+        ulong x19 = default(ulong);
+        ulong x20 = default(ulong);
+        ulong x21 = default(ulong);
+        ulong x30 = default(ulong);
+        ulong x8 = default(ulong);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0xFFFFFFFFFFFFFFE0UL)))) + (0x0UL))), x30);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0xFFFFFFFFFFFFFFE0UL)))) + (0x8UL))), x21);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x0UL))), x20);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x8UL))), x19);
+        x20 = 0x1BAB000UL;
+        x21 = 0x1A8E000UL;
+        x8 = unchecked((ulong)(unchecked((uint)(RuntimeMemory.ReadU8(unchecked((ulong)((x20) + (0x480UL))))))));
+        x21 = RuntimeMemory.ReadU64(unchecked((ulong)((x21) + (0x1B0UL))));
+        x19 = x0;
+        if ((unchecked((uint)((unchecked((uint)(x8))) & (unchecked((uint)((unchecked((uint)0x1UL)) << (int)(unchecked((int)(unchecked((uint)(0x0UL)))))))))) != unchecked((uint)0x0UL)))
+        {
+        }
+        else
+        {
+            x0 = 0x1A8E000UL;
+            x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x0) + (0x1B0UL))));
+            // Likely IL2CPP class initialization helper (guarded call).
+            x0 = RuntimeCalls.InvokeDirect(0xB7D92CUL, x0, x1, x2, x3);
+            x8 = unchecked((ulong)(unchecked((uint)(0x1UL))));
+            RuntimeMemory.WriteU8(unchecked((ulong)((x20) + (0x480UL))), unchecked((byte)(unchecked((uint)(x8)))));
+        }
+        label_0xC95FF8:
+        ;
+        x0 = RuntimeMemory.ReadU64(x21);
+        x0 = RuntimeCalls.InvokeDirect(0xB7DB70UL, x0, x1, x2, x3);
+        x1 = 0x0UL;
+        x20 = x0;
+        x0 = RuntimeCalls.InvokeDirect(0x1589338UL /* metadata target: Object.ctor */, x0, x1, x2, x3);
+        x0 = x20;
+        RuntimeMemory.WritePtr(unchecked((ulong)((x20) + (0x10UL))), unchecked((ulong)(unchecked((uint)0x0UL))));
+        RuntimeMemory.WriteU64(unchecked((ulong)((x0) + (0x20UL))), x19);
+        x1 = x19;
+        x0 = RuntimeCalls.InvokeDirect(0xB7D8D0UL, x0, x1, x2, x3);
+        x0 = x20;
+        x20 = RuntimeMemory.ReadU64(unchecked((ulong)((sp) + (0x10UL))));
+        x19 = RuntimeMemory.ReadU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x8UL))));
+        x30 = RuntimeMemory.ReadU64(sp);
+        x21 = RuntimeMemory.ReadU64(unchecked((ulong)((sp) + (0x8UL))));
+        return x0;
+        return default(ulong);
+    }
+```
+
+## `ExplosiveObject.ApplyDamage` — RVA `0xc96058`
+
+- Lift status: **exact**; input span: 192 bytes; span to next metadata RVA: 192 bytes.
+- Metadata signature: `public void ApplyDamage(float damage) { }`
+- Structural verifier: suspect=0, unverifiable=0, unmapped-instructions=24 (informational only).
+
+```csharp
+public static ulong ExplosiveObject_ApplyDamage_RVAc96058(ulong x0, ulong x1, ulong x2, ulong x3, ulong x4, ulong x5, ulong x6, ulong x7)
+    {
+        float __arm64_float_flags_left_13197460 = default(float);
+        float __arm64_float_flags_right_13197460 = default(float);
+        ulong __arm64_load_address_13197564 = default(ulong);
+        ulong __arm64_load_address_13197580 = default(ulong);
+        ulong sp = default(ulong);
+        RuntimeVector128 v0 = default(RuntimeVector128);
+        RuntimeVector128 v8 = default(RuntimeVector128);
+        ulong x19 = default(ulong);
+        ulong x20 = default(ulong);
+        ulong x30 = default(ulong);
+        ulong x8 = default(ulong);
+        RuntimeMemory.WriteF64(unchecked((ulong)((sp) + (0xFFFFFFFFFFFFFFE0UL))), global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v8.GetUInt64(0)))));
+        sp = unchecked((ulong)((sp) + (0xFFFFFFFFFFFFFFE0UL)));
+        RuntimeMemory.WriteU64(unchecked((ulong)((sp) + (0x8UL))), x30);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x0UL))), x20);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x8UL))), x19);
+        x20 = 0x1BAB000UL;
+        x8 = unchecked((ulong)(unchecked((uint)(RuntimeMemory.ReadU8(unchecked((ulong)((x20) + (0x481UL))))))));
+        v8 = v0;
+        x19 = x0;
+        if ((unchecked((uint)((unchecked((uint)(x8))) & (unchecked((uint)((unchecked((uint)0x1UL)) << (int)(unchecked((int)(unchecked((uint)(0x0UL)))))))))) != unchecked((uint)0x0UL)))
+        {
+            goto label_0xC9608C;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x0 = 0x1A8E000UL;
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x0) + (0x10UL))));
+        // Likely IL2CPP class initialization helper (guarded call).
+        x0 = RuntimeCalls.InvokeDirect(0xB7D92CUL, x0, x1, x2, x3);
+        x8 = unchecked((ulong)(unchecked((uint)(0x1UL))));
+        RuntimeMemory.WriteU8(unchecked((ulong)((x20) + (0x481UL))), unchecked((byte)(unchecked((uint)(x8)))));
+        goto label_0xC9608C;
+        label_0xC9608C:
+        ;
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x28UL))))), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) - (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v8.GetUInt64(0)))), 0))))), 0));
+        __arm64_float_flags_left_13197460 = global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0);
+        __arm64_float_flags_right_13197460 = global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0x0UL)), 0);
+        RuntimeMemory.WriteF32(unchecked((ulong)((x19) + (0x28UL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0));
+        if (((__arm64_float_flags_left_13197460 > __arm64_float_flags_right_13197460) || ((__arm64_float_flags_left_13197460 != __arm64_float_flags_left_13197460) || (__arm64_float_flags_right_13197460 != __arm64_float_flags_right_13197460))))
+        {
+            goto label_0xC96104;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x8 = unchecked((ulong)(unchecked((uint)(RuntimeMemory.ReadU8(unchecked((ulong)((x19) + (0x58UL))))))));
+        if ((unchecked((uint)(x8)) != unchecked((uint)0x0UL)))
+        {
+            goto label_0xC96104;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x8 = unchecked((ulong)(unchecked((uint)(0x1UL))));
+        x0 = x19;
+        x1 = 0x0UL;
+        RuntimeMemory.WriteU8(unchecked((ulong)((x19) + (0x58UL))), unchecked((byte)(unchecked((uint)(x8)))));
+        x0 = RuntimeCalls.InvokeDirect(0x1792190UL /* metadata target: Component.get_gameObject */, x0, x1, x2, x3);
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC96114;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x8 = 0x1A8E000UL;
+        x8 = RuntimeMemory.ReadU64(unchecked((ulong)((x8) + (0x10UL))));
+        x1 = RuntimeMemory.ReadU64(x8);
+        x0 = RuntimeCalls.InvokeDirect(0xE49224UL, x0, x1, x2, x3);
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC96114;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x1 = unchecked((ulong)(unchecked((uint)(0x1UL))));
+        x2 = 0x0UL;
+        x0 = RuntimeCalls.InvokeDirect(0x17CF250UL /* metadata target: Rigidbody.set_useGravity */, x0, unchecked((ulong)(unchecked((uint)(x1)))), x2, x3);
+        x0 = x19;
+        x0 = RuntimeCalls.InvokeDirect(0xC95FC4UL /* metadata target: ExplosiveObject.Detonate */, x0, unchecked((ulong)(unchecked((uint)(x1)))), x2, x3);
+        x1 = x0;
+        x0 = x19;
+        x20 = RuntimeMemory.ReadU64(unchecked((ulong)((sp) + (0x10UL))));
+        x19 = RuntimeMemory.ReadU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x8UL))));
+        x30 = RuntimeMemory.ReadU64(unchecked((ulong)((sp) + (0x8UL))));
+        x2 = 0x0UL;
+        __arm64_load_address_13197564 = sp;
+        v8 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(__arm64_load_address_13197564)), 0));
+        sp = unchecked((ulong)((__arm64_load_address_13197564) + (0x20UL)));
+        return RuntimeCalls.InvokeDirect(0x1795D40UL /* metadata target: MonoBehaviour.StartCoroutine */);
+        label_0xC96104:
+        ;
+        x20 = RuntimeMemory.ReadU64(unchecked((ulong)((sp) + (0x10UL))));
+        x19 = RuntimeMemory.ReadU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x10UL)))) + (0x8UL))));
+        x30 = RuntimeMemory.ReadU64(unchecked((ulong)((sp) + (0x8UL))));
+        __arm64_load_address_13197580 = sp;
+        v8 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(__arm64_load_address_13197580)), 0));
+        return x0;
+        label_0xC96114:
+        ;
+        x0 = RuntimeCalls.InvokeDirect(0xB7DB74UL, x0, x1, x2, x3);
+        return default(ulong);
+    }
+```
+
+## `ExplosiveObject.ctor` — RVA `0xc96118`
+
+- Lift status: **exact**; input span: 44 bytes; span to next metadata RVA: 44 bytes.
+- Metadata signature: `public void .ctor() { }`
+- Structural verifier: suspect=0, unverifiable=0, unmapped-instructions=5 (informational only).
+
+```csharp
+public static ulong ExplosiveObject_ctor_RVAc96118(ulong x0, ulong x1, ulong x2, ulong x3, ulong x4, ulong x5, ulong x6, ulong x7)
+    {
+        RuntimeVector128 v0 = default(RuntimeVector128);
+        RuntimeVector128 v1 = default(RuntimeVector128);
+        ulong x8 = default(ulong);
+        ulong x9 = default(ulong);
+        x8 = 0x431000UL;
+        x9 = 0x431000UL;
+        v0 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(unchecked((ulong)((x8) + (0xB98UL))))), 0));
+        v1 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(unchecked((ulong)((x9) + (0xBC8UL))))), 0));
+        x8 = unchecked((ulong)(unchecked((uint)(0xCCCDUL))));
+        x8 = unchecked((ulong)(unchecked((uint)(unchecked((ulong)((unchecked((ulong)(unchecked((uint)((unchecked((uint)(x8))) & (unchecked((uint)((~(0xFFFFUL)))))))))) | (unchecked((ulong)((unchecked((ulong)((0x3E4CUL) << (int)(unchecked((int)(0x10UL)))))) << (int)(unchecked((int)(0x0UL))))))))))));
+        x1 = 0x0UL;
+        RuntimeMemory.WriteU32(unchecked((ulong)((x0) + (0x34UL))), unchecked((uint)(x8)));
+        RuntimeMemory.WriteF64(unchecked((ulong)((x0) + (0x2CUL))), global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v0.GetUInt64(0)))));
+        RuntimeMemory.WriteF64(unchecked((ulong)((x0) + (0x3CUL))), global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v1.GetUInt64(0)))));
+        return RuntimeCalls.InvokeDirect(0x1796274UL /* metadata target: MonoBehaviour.ctor */);
+        return default(ulong);
+    }
+```
