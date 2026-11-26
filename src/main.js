@@ -10,11 +10,20 @@ import { LanTransport, DEFAULT_PORT } from './LanTransport.js';
 import { NetworkPlayers } from './NetworkPlayers.js';
 import { SoundEffects } from './SoundEffects.js';
 import { MatchSession } from './MatchSession.js';
+import { Minimap } from './Minimap.js';
 import {
   DEFAULT_GAME_SETTINGS,
   loadGameSettings,
   saveGameSettings,
 } from './GameSettings.js';
+import {
+  getProfileProgress,
+  loadPlayerProfile,
+  recordMatchResult,
+  savePlayerProfile,
+  setPreferredWeapon,
+  setProfileName,
+} from './PlayerProfile.js';
 
 const errorEl = document.getElementById('error');
 function showError(message) {
@@ -33,6 +42,7 @@ window.addEventListener('unhandledrejection', (event) => {
 const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches ?? false;
 const isTouchDevice = navigator.maxTouchPoints > 0 || coarsePointer;
 let gameSettings = loadGameSettings();
+let playerProfile = loadPlayerProfile();
 document.body.classList.toggle('touch-device', isTouchDevice);
 
 // ---------- Renderer / scene / camera ----------
@@ -81,12 +91,15 @@ controls.pointerSpeed = gameSettings.lookSensitivity;
 scene.add(camera);
 
 const player = new Player(camera, world.colliders, world.playerSpawn);
+player.displayName = playerProfile.name;
 const weapon = new Weapon(
   camera,
   scene,
   () => enemyMgr.getMeshes(player.team),
   player
 );
+const preferredWeaponIndex = ['rifle', 'pistol', 'shotgun'].indexOf(playerProfile.preferredWeapon);
+if (preferredWeaponIndex > 0) weapon.switchTo(preferredWeaponIndex);
 const enemyMgr = new EnemyManager(
   scene,
   world.enemySpawns,
@@ -116,6 +129,7 @@ function ensureNavigation() {
   return navigationPromise;
 }
 const hud = new HUD();
+const minimap = new Minimap(document.getElementById('minimap'), world);
 const lanTransport = new LanTransport();
 const networkPlayers = new NetworkPlayers(scene);
 const soundEffects = new SoundEffects();
@@ -125,7 +139,7 @@ const lanPeers = new Map();
 let activeMode = 'training';
 let lanRole = null;
 let localLanId = 'host';
-let localPlayerName = 'میزبان';
+let localPlayerName = playerProfile.name;
 let localSpawnSlot = 0;
 let lanMatchStarted = false;
 let lanSendTimer = 0;
@@ -215,6 +229,9 @@ const finalScore = document.getElementById('final-score');
 const finalLabel = document.getElementById('final-label');
 const finalMatchResult = document.getElementById('final-match-result');
 const finalWaveRow = document.getElementById('final-wave-row');
+const finalProfileReward = document.getElementById('final-profile-reward');
+const finalProfileXp = document.getElementById('final-profile-xp');
+const finalProfileLevelNote = document.getElementById('final-profile-level-note');
 const scoreboardEl = document.getElementById('scoreboard');
 const scoreboardButton = document.getElementById('scoreboard-btn');
 const scoreboardCloseButton = document.getElementById('scoreboard-close');
@@ -224,6 +241,11 @@ const blueBoardScore = document.getElementById('board-blue-score');
 const redBoardScore = document.getElementById('board-red-score');
 const killFeedEl = document.getElementById('kill-feed');
 const settingsScreen = document.getElementById('settings-screen');
+const profileScreen = document.getElementById('profile-screen');
+const profileNameInput = document.getElementById('profile-name-input');
+const profileCloseButton = document.getElementById('profile-close-btn');
+const profileForm = document.getElementById('profile-form');
+const profileWeaponChoices = [...document.querySelectorAll('[data-profile-weapon]')];
 const settingsCloseButton = document.getElementById('settings-close-btn');
 const settingsResetButton = document.getElementById('settings-reset-btn');
 const sensitivitySlider = document.getElementById('settings-sensitivity');
@@ -248,7 +270,7 @@ const lanPlayerList = document.getElementById('lan-player-list');
 const lanStartMatchButton = document.getElementById('lan-start-match-btn');
 
 function getActorDisplayName(actor) {
-  if (actor?.isPlayer) return 'شما';
+  if (actor?.isPlayer) return actor.displayName || playerProfile.name || 'شما';
   return actor?.displayName || (actor?.team === 'blue' ? 'هم‌تیمی' : 'حریف');
 }
 
@@ -359,7 +381,7 @@ function renderLanPlayers() {
 function openLanLobby(role) {
   lanRole = role;
   localLanId = role === 'host' ? 'host' : `guest-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
-  localPlayerName = role === 'host' ? 'میزبان' : 'مهمان';
+  localPlayerName = playerProfile.name;
   localSpawnSlot = 0;
   lanMatchStarted = false;
   lanPeers.clear();
@@ -418,7 +440,7 @@ async function connectToLanHost() {
   try {
     await lanListenersReady;
     await lanTransport.connect(host, DEFAULT_PORT);
-    localPlayerName = 'مهمان';
+    localPlayerName = playerProfile.name;
     await lanTransport.send({ type: 'join', playerId: localLanId, name: localPlayerName });
     setLanStatus('وصل شدی؛ منتظر شروع بازی از سوی میزبان بمان.');
   } catch (error) {
@@ -717,6 +739,11 @@ for (const button of document.querySelectorAll('[data-lan-mode]')) {
 }
 
 document.addEventListener('keydown', (event) => {
+  if (event.code === 'Escape' && !profileScreen.hidden) {
+    event.preventDefault();
+    closeProfile();
+    return;
+  }
   if (event.code === 'Escape' && !settingsScreen.hidden) {
     event.preventDefault();
     closeSettings();
@@ -920,6 +947,72 @@ function updatePickups(dt) {
 }
 
 // ---------- Local gameplay settings ----------
+let profileReturnScreen = 'start-screen';
+let profileReturnFocus = null;
+const PROFILE_WEAPON_LABELS = Object.freeze({
+  rifle: 'تفنگ تهاجمی',
+  pistol: 'تپانچه',
+  shotgun: 'شات‌گان',
+});
+const profileKdFormat = new Intl.NumberFormat('fa-IR', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function syncProfileUI() {
+  const progress = getProfileProgress(playerProfile);
+  const percent = Math.round(progress.progress * 100);
+  const stats = playerProfile.stats;
+  const kd = stats.kills / Math.max(1, stats.deaths);
+
+  document.getElementById('menu-profile-name').textContent = playerProfile.name;
+  document.getElementById('menu-profile-level').textContent = numberFa.format(progress.level);
+  document.getElementById('menu-profile-rank').textContent = progress.rank;
+  document.getElementById('menu-profile-weapon').textContent = PROFILE_WEAPON_LABELS[playerProfile.preferredWeapon];
+  document.getElementById('menu-profile-xp-fill').style.width = `${percent}%`;
+
+  document.getElementById('profile-level').textContent = numberFa.format(progress.level);
+  document.getElementById('profile-rank').textContent = progress.rank;
+  document.getElementById('profile-xp-caption').textContent = progress.xpForNextLevel === 0
+    ? 'بالاترین سطح'
+    : `${numberFa.format(progress.xpIntoLevel)} از ${numberFa.format(progress.xpForNextLevel)} XP تا سطح بعد`;
+  const detailedXpFill = document.getElementById('profile-xp-fill');
+  detailedXpFill.style.width = `${percent}%`;
+  detailedXpFill.parentElement.setAttribute('aria-valuenow', String(percent));
+
+  document.getElementById('profile-stat-matches').textContent = numberFa.format(stats.matches);
+  document.getElementById('profile-stat-wins').textContent = numberFa.format(stats.wins);
+  document.getElementById('profile-stat-losses').textContent = numberFa.format(stats.losses);
+  document.getElementById('profile-stat-draws').textContent = numberFa.format(stats.draws);
+  document.getElementById('profile-stat-kills').textContent = numberFa.format(stats.kills);
+  document.getElementById('profile-stat-deaths').textContent = numberFa.format(stats.deaths);
+  document.getElementById('profile-stat-kd').textContent = profileKdFormat.format(kd);
+  document.getElementById('profile-stat-wave').textContent = stats.bestWave > 0
+    ? numberFa.format(stats.bestWave)
+    : '—';
+  for (const choice of profileWeaponChoices) {
+    choice.setAttribute('aria-pressed', String(choice.dataset.profileWeapon === playerProfile.preferredWeapon));
+  }
+}
+
+function openProfile(returnScreen = 'start-screen') {
+  profileReturnFocus = document.activeElement;
+  profileReturnScreen = returnScreen === 'pause-screen' ? 'pause-screen' : 'start-screen';
+  startScreen.style.display = 'none';
+  pauseScreen.style.display = 'none';
+  profileNameInput.value = playerProfile.name;
+  syncProfileUI();
+  profileScreen.hidden = false;
+  profileCloseButton.focus({ preventScroll: true });
+}
+
+function closeProfile() {
+  profileScreen.hidden = true;
+  document.getElementById(profileReturnScreen).style.display = 'flex';
+  profileReturnFocus?.focus?.({ preventScroll: true });
+  profileReturnFocus = null;
+}
+
 function syncSettingsControls() {
   sensitivitySlider.value = String(Math.round(gameSettings.lookSensitivity * 100));
   sensitivityValue.textContent = `${numberFa.format(Math.round(gameSettings.lookSensitivity * 100))}٪`;
@@ -955,6 +1048,30 @@ function closeSettings() {
 }
 
 syncSettingsControls();
+syncProfileUI();
+document.getElementById('profile-open-btn').addEventListener('click', () => openProfile('start-screen'));
+document.getElementById('profile-open-pause-btn').addEventListener('click', () => openProfile('pause-screen'));
+profileCloseButton.addEventListener('click', closeProfile);
+for (const choice of profileWeaponChoices) {
+  choice.addEventListener('click', () => {
+    playerProfile = savePlayerProfile(setPreferredWeapon(playerProfile, choice.dataset.profileWeapon));
+    syncProfileUI();
+  });
+}
+profileForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  playerProfile = savePlayerProfile(setProfileName(playerProfile, profileNameInput.value));
+  player.displayName = playerProfile.name;
+  localPlayerName = playerProfile.name;
+  profileNameInput.value = playerProfile.name;
+  syncProfileUI();
+  const saveButton = document.getElementById('profile-save-btn');
+  saveButton.textContent = 'ذخیره شد';
+  window.setTimeout(() => { saveButton.textContent = 'ذخیرهٔ پروفایل'; }, 1400);
+});
+profileScreen.addEventListener('click', (event) => {
+  if (event.target === profileScreen) closeProfile();
+});
 for (const button of document.querySelectorAll('.settings-open-btn')) {
   button.addEventListener('click', () => openSettings(button.dataset.settingsReturn));
 }
@@ -1082,14 +1199,13 @@ function resetGame(mode = activeMode) {
   setScoreboardOpen(false);
   killFeedEl.replaceChildren();
   activeMode = ['zombie', 'tdm'].includes(mode) ? mode : 'training';
-  if (activeMode === 'tdm') {
-    player.kills = 0;
-    player.deaths = 0;
-  }
+  player.kills = 0;
+  player.deaths = 0;
+  player.displayName = playerProfile.name;
   document.body.classList.toggle('zombie-mode', activeMode === 'zombie');
   document.body.classList.toggle('match-mode', activeMode === 'tdm');
   player.reset(world.playerSpawn);
-  weapon.reset();
+  weapon.reset(playerProfile.preferredWeapon);
   enemyMgr.start(activeMode);
   if (activeMode === 'tdm') matchSession.start();
   else matchSession.reset();
@@ -1175,6 +1291,20 @@ function endGame({ playDeathSound = true } = {}) {
   clearInput();
   document.body.classList.remove('playing');
 
+  let profileReward = null;
+  if (!lanRole) {
+    const matchResult = activeMode === 'tdm' ? matchSession.snapshot() : null;
+    profileReward = recordMatchResult(playerProfile, {
+      mode: activeMode,
+      kills: player.kills,
+      deaths: player.deaths,
+      wave: enemyMgr.wave,
+      winner: matchResult?.winner,
+    });
+    playerProfile = savePlayerProfile(profileReward.profile);
+    syncProfileUI();
+  }
+
   if (activeMode === 'tdm') {
     const result = matchSession.snapshot();
     finalScore.textContent = `${numberFa.format(result.scores.blue)} — ${numberFa.format(result.scores.red)}`;
@@ -1193,12 +1323,21 @@ function endGame({ playDeathSound = true } = {}) {
     }
   } else {
     gameOverTitle.textContent = 'پایان بازی';
-  finalScore.textContent = numberFa.format(enemyMgr.kills);
-  finalLabel.textContent = activeMode === 'zombie' ? 'زامبی ازبین‌رفته' : 'حذف';
+    finalScore.textContent = numberFa.format(enemyMgr.kills);
+    finalLabel.textContent = activeMode === 'zombie' ? 'زامبی ازبین‌رفته' : 'حذف';
     finalMatchResult.style.display = 'none';
   }
   finalWaveRow.style.display = activeMode === 'zombie' ? 'block' : 'none';
   finalWave.textContent = numberFa.format(enemyMgr.wave);
+  if (profileReward) {
+    finalProfileReward.style.display = 'grid';
+    finalProfileXp.textContent = `+${numberFa.format(profileReward.earnedXp)} XP`;
+    finalProfileLevelNote.textContent = profileReward.levelsGained > 0
+      ? `ارتقا به سطح ${numberFa.format(profileReward.level)} · ${getProfileProgress(playerProfile).rank}`
+      : `پیشرفت محلی · سطح ${numberFa.format(profileReward.level)}`;
+  } else {
+    finalProfileReward.style.display = 'none';
+  }
   overScreen.style.display = 'flex';
   if (controls.isLocked) controls.unlock();
 }
@@ -1230,6 +1369,13 @@ function animate() {
     }
     updatePickups(dt);
     updateHud();
+    minimap.update(dt, {
+      mode: activeMode,
+      player,
+      enemies: enemyMgr.enemies,
+      pickups: world.pickups,
+      remotePlayers: [...remotePlayerStates.values()],
+    });
 
     if (lanRole && lanMatchStarted) {
       lanSendTimer += dt;

@@ -32,6 +32,36 @@ test('recovered zombie visuals replace the fallback with independently owned mes
   assert.ok(raycaster.intersectObject(recoveredHeadHitbox).length > 0, 'transparent head collider remains shootable');
 });
 
+test('unrigged zombie meshes use a readable gait and a short melee strike animation', () => {
+  const scene = new THREE.Scene();
+  const manager = {
+    mode: 'zombie',
+    onKill() {},
+    spawnTracer() {},
+  };
+  const zombie = new Enemy(scene, new THREE.Vector3(0, 0, 0), manager, 'zombie');
+  const template = new THREE.Group();
+  template.add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 1, 0.3), new THREE.MeshStandardMaterial()));
+  zombie.setRecoveredVisual(template);
+  zombie.animationTime = 0.4;
+  zombie.isMoving = true;
+  zombie.animate(0.12);
+
+  assert.ok(zombie.gaitBlend > 0.5);
+  assert.ok(zombie.group.position.y > 0, 'gait adds visible body weight shifts');
+  assert.notEqual(zombie.recoveredVisual.rotation.x, 0, 'the static OBJ gets a procedural lean');
+
+  const player = {
+    camera: { position: new THREE.Vector3(0, 1.7, 1) },
+    health: 100,
+    damage(amount) { this.health -= amount; },
+  };
+  zombie.attackCooldown = 0;
+  zombie.update(0.016, player, [], 30);
+  assert.equal(player.health, 88);
+  assert.ok(zombie.attackAnimation > 0, 'a successful bite starts an attack pose');
+});
+
 test('first zombie wave is small enough for the starter arena', () => {
   assert.deepEqual(zombieWavePlan(1), {
     count: 7,
@@ -122,6 +152,7 @@ test('network snapshots keep training bots aligned without client-side score aut
   client.start('training');
   host.enemies[0].group.position.set(4, 0, -2);
   host.enemies[0].health = 63;
+  host.enemies[0].attackAnimation = 0.26;
   host.kills = 2;
   client.networkClient = true;
 
@@ -130,6 +161,8 @@ test('network snapshots keep training bots aligned without client-side score aut
   assert.equal(client.enemies[0].netId, host.enemies[0].netId);
   assert.equal(client.enemies[0].group.position.x, 4);
   assert.equal(client.enemies[0].health, 63);
+  assert.equal(client.enemies[0].isMoving, true);
+  assert.equal(client.enemies[0].attackAnimation, 0.26);
   assert.equal(client.kills, 2);
 
   client.enemies[0].takeDamage(1000);

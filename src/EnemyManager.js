@@ -117,6 +117,12 @@ export class Enemy {
     this.attackCooldown = 0;
     this.respawnAt = null;
     this.animationTime = Math.random() * Math.PI * 2;
+    this.gaitBlend = 0;
+    this.isMoving = false;
+    this.attackAnimation = 0;
+    this.strafeDirection = Math.random() < 0.5 ? -1 : 1;
+    this.strafeCooldown = 0;
+    this.strafeDuration = 0;
 
     this.navigationPath = [];
     this.navigationTarget = new THREE.Vector3();
@@ -135,15 +141,19 @@ export class Enemy {
   }
 
   makeModel() {
-    const isZombie = this.kind === 'zombie';
     this.fallbackVisual = new THREE.Group();
+    if (this.kind !== 'zombie') {
+      this.makeSoldierModel();
+      return;
+    }
+
     const bodyMaterial = new THREE.MeshStandardMaterial({
-      color: isZombie ? 0x62734b : this.team === 'blue' ? 0x347fca : 0xcc4433,
+      color: 0x62734b,
       roughness: 0.78,
       metalness: 0.02,
     });
     const skinMaterial = new THREE.MeshStandardMaterial({
-      color: isZombie ? 0x9b9a69 : 0xd7ab8d,
+      color: 0x9b9a69,
       roughness: 0.9,
     });
     const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.4, 0.9, 4, 8), bodyMaterial);
@@ -157,27 +167,130 @@ export class Enemy {
     this.fallbackVisual.add(body, head);
     this.head = head;
 
-    if (isZombie) {
-      const armGeometry = new THREE.CapsuleGeometry(0.115, 0.58, 3, 6);
-      const leftArm = new THREE.Mesh(armGeometry, skinMaterial);
-      leftArm.position.set(-0.43, 1.1, 0.06);
-      leftArm.rotation.z = -0.75;
-      leftArm.castShadow = true;
-      leftArm.userData.part = 'body';
-      const rightArm = new THREE.Mesh(armGeometry, skinMaterial);
-      rightArm.position.set(0.43, 1.1, 0.06);
-      rightArm.rotation.z = 0.75;
-      rightArm.castShadow = true;
-      rightArm.userData.part = 'body';
-      const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0xf07d43 });
-      const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 6), eyeMaterial);
-      const rightEye = leftEye.clone();
-      leftEye.position.set(-0.105, 1.73, 0.248);
-      rightEye.position.set(0.105, 1.73, 0.248);
-      this.fallbackVisual.add(leftArm, rightArm, leftEye, rightEye);
-      this.leftArm = leftArm;
-      this.rightArm = rightArm;
-    }
+    const armGeometry = new THREE.CapsuleGeometry(0.115, 0.58, 3, 6);
+    const leftArm = new THREE.Mesh(armGeometry, skinMaterial);
+    leftArm.position.set(-0.43, 1.1, 0.06);
+    leftArm.rotation.z = -0.75;
+    leftArm.castShadow = true;
+    leftArm.userData.part = 'body';
+    const rightArm = new THREE.Mesh(armGeometry, skinMaterial);
+    rightArm.position.set(0.43, 1.1, 0.06);
+    rightArm.rotation.z = 0.75;
+    rightArm.castShadow = true;
+    rightArm.userData.part = 'body';
+    const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0xf07d43 });
+    const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 6), eyeMaterial);
+    const rightEye = leftEye.clone();
+    leftEye.position.set(-0.105, 1.73, 0.248);
+    rightEye.position.set(0.105, 1.73, 0.248);
+    this.fallbackVisual.add(leftArm, rightArm, leftEye, rightEye);
+    this.leftArm = leftArm;
+    this.rightArm = rightArm;
+    this.group.add(this.fallbackVisual);
+  }
+
+  makeSoldierModel() {
+    const teamColor = this.team === 'blue' ? 0x377fb5 : 0xb84a3e;
+    const armorMaterial = new THREE.MeshStandardMaterial({
+      color: 0x38434a,
+      roughness: 0.68,
+      metalness: 0.24,
+    });
+    const teamMaterial = new THREE.MeshStandardMaterial({
+      color: teamColor,
+      roughness: 0.56,
+      metalness: 0.16,
+      emissive: teamColor,
+      emissiveIntensity: 0.08,
+    });
+    const fabricMaterial = new THREE.MeshStandardMaterial({
+      color: 0x222c30,
+      roughness: 0.92,
+    });
+    const trimMaterial = new THREE.MeshStandardMaterial({
+      color: 0x9daaa5,
+      roughness: 0.45,
+      metalness: 0.58,
+    });
+    const skinMaterial = new THREE.MeshStandardMaterial({
+      color: 0xa9826b,
+      roughness: 0.86,
+    });
+    const visorMaterial = new THREE.MeshStandardMaterial({
+      color: 0x111b20,
+      roughness: 0.22,
+      metalness: 0.55,
+    });
+    const weaponMaterial = new THREE.MeshStandardMaterial({
+      color: 0x1b2327,
+      roughness: 0.48,
+      metalness: 0.62,
+    });
+
+    const addMesh = (geometry, material, position, part = 'body', parent = this.fallbackVisual) => {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(...position);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.userData.part = part;
+      parent.add(mesh);
+      return mesh;
+    };
+
+    // Readable low-poly armor silhouette with team color on the chest/shoulders.
+    const torso = addMesh(new THREE.CapsuleGeometry(0.32, 0.56, 4, 8), fabricMaterial, [0, 1.05, 0], 'body');
+    torso.name = 'soldier-body-hitbox';
+    const vest = addMesh(new THREE.BoxGeometry(0.59, 0.68, 0.29), armorMaterial, [0, 1.17, 0.105]);
+    vest.name = 'soldier-armor-vest';
+    addMesh(new THREE.BoxGeometry(0.47, 0.38, 0.035), teamMaterial, [0, 1.21, 0.27]);
+    addMesh(new THREE.BoxGeometry(0.065, 0.36, 0.025), trimMaterial, [-0.19, 1.2, 0.294]);
+    addMesh(new THREE.BoxGeometry(0.065, 0.36, 0.025), trimMaterial, [0.19, 1.2, 0.294]);
+    addMesh(new THREE.BoxGeometry(0.68, 0.13, 0.36), armorMaterial, [0, 0.72, 0.02]);
+    addMesh(new THREE.BoxGeometry(0.31, 0.38, 0.27), fabricMaterial, [0, 1.12, -0.23]);
+
+    const head = addMesh(new THREE.SphereGeometry(0.225, 12, 10), skinMaterial, [0, 1.76, 0.015], 'head');
+    head.name = 'soldier-head-hitbox';
+    const helmet = addMesh(
+      new THREE.SphereGeometry(0.255, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+      teamMaterial,
+      [0, 1.81, 0.015],
+      'head'
+    );
+    helmet.name = 'soldier-helmet';
+    addMesh(new THREE.BoxGeometry(0.31, 0.085, 0.055), visorMaterial, [0, 1.755, 0.205], 'head');
+    addMesh(new THREE.BoxGeometry(0.12, 0.045, 0.06), trimMaterial, [0, 1.89, 0.235], 'head');
+    this.head = head;
+
+    const shoulderGeometry = new THREE.SphereGeometry(0.2, 10, 8);
+    addMesh(shoulderGeometry, teamMaterial, [-0.4, 1.39, 0.02]);
+    addMesh(shoulderGeometry, teamMaterial, [0.4, 1.39, 0.02]);
+    const armGeometry = new THREE.CapsuleGeometry(0.105, 0.34, 3, 6);
+    this.leftArm = addMesh(armGeometry, armorMaterial, [-0.45, 1.12, 0.12]);
+    this.rightArm = addMesh(armGeometry, armorMaterial, [0.45, 1.12, 0.12]);
+    this.leftArm.rotation.z = -0.12;
+    this.rightArm.rotation.z = 0.12;
+    addMesh(new THREE.SphereGeometry(0.105, 8, 6), skinMaterial, [-0.43, 0.84, 0.27]);
+    addMesh(new THREE.SphereGeometry(0.105, 8, 6), skinMaterial, [0.43, 0.84, 0.27]);
+
+    const legGeometry = new THREE.CapsuleGeometry(0.14, 0.48, 3, 6);
+    this.leftLeg = addMesh(legGeometry, fabricMaterial, [-0.18, 0.47, 0]);
+    this.rightLeg = addMesh(legGeometry, fabricMaterial, [0.18, 0.47, 0]);
+    addMesh(new THREE.BoxGeometry(0.29, 0.22, 0.42), armorMaterial, [-0.18, 0.13, 0.08]);
+    addMesh(new THREE.BoxGeometry(0.29, 0.22, 0.42), armorMaterial, [0.18, 0.13, 0.08]);
+    addMesh(new THREE.BoxGeometry(0.1, 0.27, 0.12), teamMaterial, [-0.18, 0.76, 0.145]);
+    addMesh(new THREE.BoxGeometry(0.1, 0.27, 0.12), teamMaterial, [0.18, 0.76, 0.145]);
+
+    const rifle = new THREE.Group();
+    rifle.name = 'soldier-rifle';
+    rifle.position.set(0.34, 1.1, 0.36);
+    addMesh(new THREE.BoxGeometry(0.12, 0.13, 0.43), weaponMaterial, [0, 0, 0.12], 'body', rifle);
+    const barrel = addMesh(new THREE.CylinderGeometry(0.023, 0.028, 0.48, 7), weaponMaterial, [0, 0.02, 0.55], 'body', rifle);
+    barrel.rotation.x = Math.PI / 2;
+    addMesh(new THREE.BoxGeometry(0.105, 0.095, 0.25), weaponMaterial, [0, 0, -0.21], 'body', rifle);
+    addMesh(new THREE.BoxGeometry(0.09, 0.2, 0.12), weaponMaterial, [0, -0.15, 0.14], 'body', rifle);
+    addMesh(new THREE.BoxGeometry(0.15, 0.1, 0.2), armorMaterial, [0, 0.01, 0.4], 'body', rifle);
+    this.fallbackVisual.add(rifle);
+    this.rifle = rifle;
     this.group.add(this.fallbackVisual);
   }
 
@@ -197,6 +310,8 @@ export class Enemy {
       object.receiveShadow = true;
     });
     this.recoveredVisual = visual;
+    this.recoveredVisualBasePosition = visual.position.clone();
+    this.recoveredVisualBaseRotation = visual.rotation.clone();
     this.group.add(visual);
     this.fallbackVisual.visible = false;
   }
@@ -215,6 +330,16 @@ export class Enemy {
     this.attackCooldown = 0.35 + Math.random() * 0.55;
     this.respawnAt = null;
     this.animationTime = Math.random() * Math.PI * 2;
+    this.gaitBlend = 0;
+    this.isMoving = false;
+    this.attackAnimation = 0;
+    this.strafeDirection = Math.random() < 0.5 ? -1 : 1;
+    this.strafeCooldown = 0.8 + Math.random() * 1.2;
+    this.strafeDuration = 0;
+    if (this.recoveredVisualBasePosition && this.recoveredVisual) {
+      this.recoveredVisual.position.copy(this.recoveredVisualBasePosition);
+      this.recoveredVisual.rotation.copy(this.recoveredVisualBaseRotation);
+    }
     this.navigationPath = [];
     this.navigationTargetValid = false;
     this.navigationWaypointIndex = 0;
@@ -258,6 +383,7 @@ export class Enemy {
   }
 
   moveToward(target, dt, colliders, bounds, distance) {
+    this.isMoving = false;
     const from = this.group.position;
     if (distance <= this.attackRange * 0.8) return;
 
@@ -321,23 +447,91 @@ export class Enemy {
       if (nextDistance < best.distance - 0.0001) best = { x, z, distance: nextDistance };
     }
 
+    this.isMoving = Math.hypot(best.x - from.x, best.z - from.z) > 0.0001;
     from.x = best.x;
     from.z = best.z;
+  }
+
+  strafeAround(target, dt, colliders, bounds) {
+    if (this.strafeDuration <= 0) {
+      this.strafeCooldown -= dt;
+      if (this.strafeCooldown <= 0) {
+        this.strafeDirection = Math.random() < 0.5 ? -1 : 1;
+        this.strafeDuration = 0.48 + Math.random() * 0.35;
+        this.strafeCooldown = 2.1 + Math.random() * 1.4;
+      }
+    }
+    if (this.strafeDuration <= 0) return;
+
+    const from = this.group.position;
+    const dx = target.x - from.x;
+    const dz = target.z - from.z;
+    const distance = Math.hypot(dx, dz);
+    if (distance < 0.01) return;
+
+    const step = (this.speed * 0.62 * dt * this.strafeDirection) / distance;
+    let x = from.x + dz * step;
+    let z = from.z - dx * step;
+    [x, z] = resolveCircleBoxes(x, z, this.radius, colliders);
+    x = clamp(x, -bounds + this.radius, bounds - this.radius);
+    z = clamp(z, -bounds + this.radius, bounds - this.radius);
+    this.isMoving = Math.hypot(x - from.x, z - from.z) > 0.0001;
+    from.x = x;
+    from.z = z;
+    this.strafeDuration = Math.max(0, this.strafeDuration - dt);
   }
 
   animate(dt) {
     if (!this.alive) return;
     this.animationTime += dt;
-    if (this.kind === 'zombie' && this.leftArm) {
-      this.leftArm.rotation.z = -0.75 + Math.sin(this.animationTime * 5.2) * 0.14;
-      this.rightArm.rotation.z = 0.75 + Math.sin(this.animationTime * 5.2 + 1.2) * 0.14;
-      this.group.position.y = Math.sin(this.animationTime * 5.2) * 0.025;
+    this.attackAnimation = Math.max(0, this.attackAnimation - dt);
+    this.gaitBlend = THREE.MathUtils.damp(this.gaitBlend, this.isMoving ? 1 : 0, 9, dt);
+    const phase = this.animationTime * (this.kind === 'zombie' ? 7.2 : 8.4);
+    const stride = Math.sin(phase);
+    const attackWeight = THREE.MathUtils.clamp(this.attackAnimation / 0.42, 0, 1);
+
+    if (this.kind === 'bot') {
+      this.group.position.y = Math.abs(stride) * 0.035 * this.gaitBlend + attackWeight * 0.012;
+      if (this.leftArm) this.leftArm.rotation.x = -stride * 0.2 * this.gaitBlend - attackWeight * 0.12;
+      if (this.rightArm) this.rightArm.rotation.x = stride * 0.18 * this.gaitBlend - attackWeight * 0.24;
+      if (this.leftLeg) this.leftLeg.rotation.x = stride * 0.32 * this.gaitBlend;
+      if (this.rightLeg) this.rightLeg.rotation.x = -stride * 0.32 * this.gaitBlend;
+      if (this.head) this.head.rotation.x = attackWeight * 0.04;
+      if (this.rifle) this.rifle.rotation.x = -attackWeight * 0.07;
+      return;
+    }
+    if (this.kind !== 'zombie') return;
+
+    const bob = Math.abs(stride) * 0.07 * this.gaitBlend;
+    this.group.position.y = bob + attackWeight * 0.025;
+
+    // The recovered ZombieC is an unrigged OBJ. Give it readable gait, weight
+    // shifts and a short forward strike without pretending it has a skeleton.
+    if (this.recoveredVisual && this.recoveredVisualBasePosition) {
+      this.recoveredVisual.position.copy(this.recoveredVisualBasePosition);
+      this.recoveredVisual.position.y += bob * 0.2;
+      this.recoveredVisual.rotation.copy(this.recoveredVisualBaseRotation);
+      this.recoveredVisual.rotation.x += this.gaitBlend * 0.035 + attackWeight * 0.17;
+      this.recoveredVisual.rotation.y += stride * this.gaitBlend * 0.025;
+      this.recoveredVisual.rotation.z += stride * this.gaitBlend * 0.045 + attackWeight * 0.035;
+    }
+
+    if (this.leftArm) {
+      this.leftArm.rotation.z = -0.75 + stride * 0.24 + attackWeight * 0.48;
+      this.rightArm.rotation.z = 0.75 - stride * 0.24 - attackWeight * 0.28;
+      this.leftArm.rotation.x = attackWeight * 0.12;
+      this.rightArm.rotation.x = -attackWeight * 0.08;
+    }
+    if (this.head) {
+      this.head.rotation.x = this.gaitBlend * 0.025 + attackWeight * 0.07;
+      this.head.rotation.z = stride * this.gaitBlend * 0.035;
     }
   }
 
   update(dt, player, colliders, bounds) {
     if (!this.alive) return;
     this.animate(dt);
+    this.isMoving = false;
 
     const candidates = Array.isArray(player) ? player : [player];
     let targetActor = null;
@@ -391,15 +585,20 @@ export class Enemy {
     this.attackCooldown -= dt;
     if (distance > this.detectRange) return;
 
-    const canSeeTarget = this.hasLineOfSight(target, colliders);
+    let canSeeTarget = this.hasLineOfSight(target, colliders);
     if (this.kind === 'bot') {
       if (distance > this.shootRange || !canSeeTarget) {
         this.moveToward(target, dt, colliders, bounds, distance);
+        canSeeTarget = this.hasLineOfSight(target, colliders);
+      } else if (this.manager.mode === 'tdm') {
+        this.strafeAround(target, dt, colliders, bounds);
+        canSeeTarget = this.hasLineOfSight(target, colliders);
       }
       const shotDistance = Math.hypot(target.x - from.x, target.z - from.z);
       if (shotDistance > this.shootRange || this.attackCooldown > 0 || !canSeeTarget) return;
 
       this.attackCooldown = this.attackRate;
+      this.attackAnimation = 0.18;
       const hit = Math.random() < this.hitChance;
       this.manager.spawnTracer(from, target, hit);
       if (hit) damageActor(targetActor, this.damage, this);
@@ -411,6 +610,7 @@ export class Enemy {
     if (updatedDistance > this.attackRange || this.attackCooldown > 0 || !canSeeTarget) return;
 
     this.attackCooldown = this.attackRate;
+    this.attackAnimation = 0.42;
     damageActor(targetActor, this.damage, this);
   }
 }
@@ -766,6 +966,7 @@ export class EnemyManager {
         maxHealth: enemy.maxHealth,
         alive: enemy.alive,
         animationTime: enemy.animationTime,
+        attackAnimation: enemy.attackAnimation,
         speed: enemy.speed,
       })),
     };
@@ -807,6 +1008,7 @@ export class EnemyManager {
       }
 
       const alive = remote.alive === true;
+      enemy.isMoving = alive && distanceXZ(enemy.group.position, { x, z }) > 0.025;
       if (alive && !enemy.alive) {
         enemy.spawnAt(new THREE.Vector3(x, y, z), {
           health: maxHealth,
@@ -825,6 +1027,9 @@ export class EnemyManager {
       if (typeof remote.displayName === 'string')
         enemy.displayName = remote.displayName.slice(0, 24);
       if (Number.isFinite(Number(remote.animationTime))) enemy.animationTime = Number(remote.animationTime);
+      if (Number.isFinite(Number(remote.attackAnimation))) {
+        enemy.attackAnimation = THREE.MathUtils.clamp(Number(remote.attackAnimation), 0, 0.42);
+      }
       enemy.respawnAt = null;
       receivedIds.add(id);
       highestId = Math.max(highestId, id);

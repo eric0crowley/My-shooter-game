@@ -20,6 +20,7 @@
     <div id="damage-vignette" aria-hidden="true"></div>
 
     <div id="hud">
+      <canvas id="minimap" role="img" aria-label="نقشهٔ تاکتیکی از بالا؛ نشانه‌ها رنگ تیم و موقعیت بازیگرها را نشان می‌دهند">نقشهٔ میدان</canvas>
       <div id="crosshair" aria-hidden="true"><span></span></div>
       <div id="hitmarker" aria-hidden="true">×</div>
 
@@ -174,6 +175,16 @@
         <p class="panel-copy">
           تمرین، بقا و مسابقهٔ تیمی آفلاین؛ بازی گروهی روی گوشی‌های دیگر فعلاً در شبکهٔ محلی آزمایشی است.</p>
 
+        <section class="menu-profile-card" aria-label="خلاصهٔ پروفایل بازیکن">
+          <div class="profile-avatar-small" aria-hidden="true">✦</div>
+          <div class="menu-profile-copy">
+            <strong id="menu-profile-name">بازیکن</strong>
+            <span><b id="menu-profile-level">۱</b> · <span id="menu-profile-rank">سرباز</span> · <span id="menu-profile-weapon">تفنگ تهاجمی</span></span>
+            <div class="profile-xp-track" aria-hidden="true"><span id="menu-profile-xp-fill"></span></div>
+          </div>
+          <button id="profile-open-btn" class="profile-open-button" type="button">پروفایل</button>
+        </section>
+
         <div class="mode-grid" aria-label="انتخاب حالت بازی">
           <button id="start-training-btn" class="mode-card" type="button">
             <span class="mode-icon" aria-hidden="true">◎</span>
@@ -218,6 +229,57 @@
           <li>جعبه‌های سبز سلامتی و جعبه‌های زرد مهمات می‌دهند</li>
         </ul>
         <span class="panel-footnote">نسخهٔ آزمایشی · بدون نیاز به اینترنت</span>
+      </div>
+    </section>
+
+    <section id="profile-screen" class="overlay" hidden>
+      <div class="panel profile-panel" role="dialog" aria-modal="true" aria-labelledby="profile-title">
+        <span class="panel-kicker">پیشرفت محلی · فقط روی این دستگاه</span>
+        <h2 id="profile-title">پروفایل بازیکن</h2>
+        <div class="profile-hero">
+          <div class="profile-emblem" aria-label="سطح بازیکن">
+            <span id="profile-level">۱</span><small>سطح</small>
+          </div>
+          <div class="profile-hero-copy">
+            <strong id="profile-rank">سرباز</strong>
+            <span id="profile-xp-caption">۰ از ۱۲۰ XP تا سطح بعد</span>
+            <div class="profile-xp-track" role="progressbar" aria-label="پیشرفت تا سطح بعد" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <span id="profile-xp-fill"></span>
+            </div>
+          </div>
+        </div>
+
+        <form id="profile-form" class="profile-form">
+          <label class="settings-label" for="profile-name-input">نام نمایشی</label>
+          <input id="profile-name-input" class="profile-name-input" type="text" maxlength="20" autocomplete="nickname" spellcheck="false" dir="auto" />
+
+          <span class="settings-label profile-loadout-label">سلاح آغازین</span>
+          <div class="profile-weapon-picker" role="group" aria-label="انتخاب سلاح آغازین">
+            <button class="profile-weapon-choice" data-profile-weapon="rifle" type="button" aria-pressed="false">
+              <span aria-hidden="true">⌁</span><strong>تفنگ تهاجمی</strong><small>همه‌فن‌حریف</small>
+            </button>
+            <button class="profile-weapon-choice" data-profile-weapon="pistol" type="button" aria-pressed="false">
+              <span aria-hidden="true">◈</span><strong>تپانچه</strong><small>سبک و دقیق</small>
+            </button>
+            <button class="profile-weapon-choice" data-profile-weapon="shotgun" type="button" aria-pressed="false">
+              <span aria-hidden="true">▤</span><strong>شات‌گان</strong><small>برد نزدیک</small>
+            </button>
+          </div>
+          <button id="profile-save-btn" class="primary-button profile-save-button" type="submit">ذخیرهٔ پروفایل</button>
+        </form>
+
+        <div class="profile-stats-grid" aria-label="آمار کلی محلی">
+          <div><small>مسابقه</small><strong id="profile-stat-matches">۰</strong></div>
+          <div><small>برد</small><strong id="profile-stat-wins">۰</strong></div>
+          <div><small>باخت</small><strong id="profile-stat-losses">۰</strong></div>
+          <div><small>مساوی</small><strong id="profile-stat-draws">۰</strong></div>
+          <div><small>حذف</small><strong id="profile-stat-kills">۰</strong></div>
+          <div><small>مرگ</small><strong id="profile-stat-deaths">۰</strong></div>
+          <div><small>نسبت K/D</small><strong id="profile-stat-kd">۰٫۰۰</strong></div>
+          <div><small>بهترین موج</small><strong id="profile-stat-wave">—</strong></div>
+        </div>
+        <p class="profile-privacy-note">آمار و XP فقط محلی ذخیره می‌شوند؛ بازی آنلاین رتبه‌بندی یا پاداش رقابتی ندارد.</p>
+        <button id="profile-close-btn" class="secondary-button" type="button">بازگشت</button>
       </div>
     </section>
 
@@ -296,6 +358,7 @@
         <span class="panel-kicker">مکث</span>
         <h2>بازی متوقف شد</h2>
         <p id="pause-copy">برای ادامه، دکمهٔ ادامه را بزن.</p>
+        <button id="profile-open-pause-btn" class="secondary-button" type="button">پروفایل و آمار محلی</button>
         <button class="secondary-button settings-open-btn" data-settings-return="pause-screen" type="button">تنظیمات بازی</button>
         <button id="resume-btn" class="primary-button" type="button">ادامهٔ بازی</button>
         <button id="pause-menu-btn" class="secondary-button" type="button">بازگشت به منو</button>
@@ -315,6 +378,9 @@
           style="display: none"
         ></p>
         <p id="final-wave-row" class="final-wave" style="display: none">بالاترین موج: <strong id="final-wave">۱</strong></p>
+        <div id="final-profile-reward" class="final-profile-reward" style="display: none" aria-live="polite">
+          <strong id="final-profile-xp">+۰ XP</strong><span id="final-profile-level-note">پیشرفت پروفایل</span>
+        </div>
         <button id="restart-btn" class="primary-button" type="button">شروع دوباره</button>
         <button id="game-over-menu-btn" class="secondary-button" type="button">بازگشت به منو</button>
       </div>

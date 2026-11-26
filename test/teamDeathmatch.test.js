@@ -59,6 +59,25 @@ test("offline team match creates balanced five-versus-five sides and filters fri
   }
 });
 
+test('team bots have a colored armored silhouette and a procedural movement gait', () => {
+  const scene = new THREE.Scene();
+  const manager = { onKill() {}, spawnTracer() {} };
+  const bot = new Enemy(scene, new THREE.Vector3(0, 0, 0), manager, 'bot', { team: 'blue' });
+  try {
+    assert.ok(bot.fallbackVisual.children.length >= 20, 'soldier armor, limbs, helmet and rifle are assembled');
+    assert.ok(bot.leftLeg && bot.rightLeg && bot.rifle);
+    assert.equal(bot.head.userData.part, 'head');
+    bot.animationTime = 0.25;
+    bot.isMoving = true;
+    bot.animate(0.1);
+    assert.ok(bot.gaitBlend > 0.5);
+    assert.notEqual(bot.leftLeg.rotation.x, 0);
+    assert.notEqual(bot.rightLeg.rotation.x, 0);
+  } finally {
+    disposeScene(scene);
+  }
+});
+
 test("team AI selects and damages the nearest opposing bot, not a nearby ally", () => {
   const scene = new THREE.Scene();
   const manager = { onKill() {}, spawnTracer() {} };
@@ -91,6 +110,34 @@ test("team AI selects and damages the nearest opposing bot, not a nearby ally", 
     92,
     "the nearest opponent receives the ranged hit",
   );
+});
+
+test('TDM bots strafe while holding a clear firing lane', () => {
+  const scene = new THREE.Scene();
+  const manager = { mode: 'tdm', onKill() {}, spawnTracer() {} };
+  const bot = new Enemy(scene, new THREE.Vector3(0, 0, 0), manager, 'bot', { team: 'red' });
+  const player = {
+    team: 'blue',
+    alive: true,
+    camera: { position: new THREE.Vector3(0, 1.7, 10) },
+    health: 100,
+    damage(amount) { this.health -= amount; },
+  };
+  bot.attackCooldown = 0;
+  bot.strafeCooldown = 0;
+  const originalRandom = Math.random;
+  try {
+    Math.random = () => 0;
+    bot.update(0.1, [player], [], 30);
+  } finally {
+    Math.random = originalRandom;
+    disposeScene(scene);
+  }
+
+  assert.notEqual(bot.group.position.x, 0, 'strafing changes the firing position without rushing the target');
+  assert.ok(bot.strafeDuration > 0);
+  assert.ok(bot.strafeCooldown > 0);
+  assert.equal(player.health, 92, 'the bot can continue firing while moving laterally');
 });
 
 test('TDM bots choose a nearby blocked firing angle and retreat instead of shooting immediately', () => {

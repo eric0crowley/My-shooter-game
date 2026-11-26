@@ -70,6 +70,123 @@ export function buildWorld(scene) {
   addWall(-half, 0, wallT, size);
   addWall(half, 0, wallT, size);
 
+  // ---- Industrial frame and team landmarks ----
+  // These accents sit above or on the perimeter so they add map identity
+  // without changing the tested collision layout or navmesh walkable surface.
+  const arenaDetails = new THREE.Group();
+  arenaDetails.name = 'arena-landmarks';
+  scene.add(arenaDetails);
+  const frameMat = new THREE.MeshStandardMaterial({
+    color: 0x263a42,
+    roughness: 0.48,
+    metalness: 0.72,
+  });
+  const cyanGlowMat = new THREE.MeshStandardMaterial({
+    color: 0x65d6d0,
+    emissive: 0x176b6b,
+    emissiveIntensity: 0.7,
+    roughness: 0.35,
+    metalness: 0.25,
+  });
+  const amberGlowMat = new THREE.MeshStandardMaterial({
+    color: 0xffb45e,
+    emissive: 0x71360c,
+    emissiveIntensity: 0.45,
+    roughness: 0.45,
+    metalness: 0.18,
+  });
+  const frameBeamGeometry = new THREE.BoxGeometry(size - 4, 0.24, 0.32);
+  const framePostGeometry = new THREE.BoxGeometry(0.28, wallH - 0.55, 0.28);
+  const frameLightGeometry = new THREE.BoxGeometry(5.4, 0.075, 0.42);
+  for (const z of [-21, 0, 21]) {
+    const beam = new THREE.Mesh(frameBeamGeometry, frameMat);
+    beam.position.set(0, wallH - 0.55, z);
+    beam.castShadow = false;
+    beam.receiveShadow = true;
+    arenaDetails.add(beam);
+
+    for (const x of [-half + 2, half - 2]) {
+      const post = new THREE.Mesh(framePostGeometry, frameMat);
+      post.position.set(x, (wallH - 0.55) / 2, z);
+      arenaDetails.add(post);
+    }
+
+    const lightStrip = new THREE.Mesh(frameLightGeometry, z === 0 ? cyanGlowMat : amberGlowMat);
+    lightStrip.position.set(0, wallH - 0.78, z);
+    arenaDetails.add(lightStrip);
+  }
+
+  function addTeamBanner(name, x, z, color, faceTowardCenter) {
+    const group = new THREE.Group();
+    group.name = name;
+    group.position.set(x, 0, z);
+    group.rotation.y = faceTowardCenter ? Math.PI : 0;
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.045, 0.07, 3.7, 8),
+      frameMat
+    );
+    pole.position.y = 1.85;
+    group.add(pole);
+
+    const flagShape = new THREE.Shape();
+    flagShape.moveTo(0.03, 3.45);
+    flagShape.lineTo(1.05, 3.08);
+    flagShape.lineTo(0.03, 2.7);
+    flagShape.closePath();
+    const flagMaterial = new THREE.MeshStandardMaterial({
+      color,
+      emissive: color,
+      emissiveIntensity: 0.22,
+      side: THREE.DoubleSide,
+      roughness: 0.7,
+    });
+    const flag = new THREE.Mesh(new THREE.ShapeGeometry(flagShape), flagMaterial);
+    flag.position.x = 0.04;
+    flag.castShadow = true;
+    group.add(flag);
+    const base = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.24, 0.3, 0.14, 10),
+      frameMat
+    );
+    base.position.y = 0.07;
+    group.add(base);
+    arenaDetails.add(group);
+  }
+  addTeamBanner('blue-team-banner', -24.5, 24.5, 0x48baff, true);
+  addTeamBanner('red-team-banner', 24.5, -24.5, 0xff6c58, false);
+
+  // A framed signal panel gives the far spawn a clear landmark and helps
+  // orient players returning from the centre lanes.
+  const gateFrame = new THREE.Mesh(new THREE.BoxGeometry(10.5, 2.4, 0.3), frameMat);
+  gateFrame.name = 'far-gate-sign-frame';
+  gateFrame.position.set(0, 3.05, -half + 0.72);
+  arenaDetails.add(gateFrame);
+  const gateSignal = new THREE.Mesh(new THREE.BoxGeometry(8.6, 0.11, 0.12), cyanGlowMat);
+  gateSignal.name = 'far-gate-signal';
+  gateSignal.position.set(0, 3.7, -half + 0.51);
+  arenaDetails.add(gateSignal);
+  const gateEmblem = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.43, 0),
+    amberGlowMat
+  );
+  gateEmblem.name = 'far-gate-emblem';
+  gateEmblem.position.set(0, 2.85, -half + 0.48);
+  gateEmblem.rotation.y = Math.PI / 4;
+  arenaDetails.add(gateEmblem);
+
+  // Colored floor ticks identify each spawn lane; they are paint, not blockers.
+  for (const [z, material, prefix] of [
+    [23.5, cyanGlowMat, 'blue'],
+    [-23.5, amberGlowMat, 'red'],
+  ]) {
+    for (const x of [-18, -12, -6, 0, 6, 12, 18]) {
+      const tick = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.018, 0.11), material);
+      tick.name = `${prefix}-spawn-lane-mark`;
+      tick.position.set(x, 0.045, z);
+      arenaDetails.add(tick);
+    }
+  }
+
   // ---- Cover ----
   const crateMat = new THREE.MeshStandardMaterial({ color: 0x536064, roughness: 0.76, metalness: 0.22 });
   const crateTopMat = new THREE.MeshStandardMaterial({
@@ -85,8 +202,21 @@ export function buildWorld(scene) {
     [-18, 0, 3, 8, 3], [0, 18, 8, 3, 3], [0, -18, 8, 3, 3],
   ];
 
-  for (const [x, z, w, d, h] of obstacleDefs) {
+  const crateBandMat = new THREE.MeshStandardMaterial({
+    color: 0x34464b,
+    roughness: 0.52,
+    metalness: 0.62,
+  });
+  const crateHazardMat = new THREE.MeshStandardMaterial({
+    color: 0xd99545,
+    emissive: 0x301708,
+    emissiveIntensity: 0.25,
+    roughness: 0.54,
+    metalness: 0.22,
+  });
+  for (const [index, [x, z, w, d, h]] of obstacleDefs.entries()) {
     const cover = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), crateMat);
+    cover.name = `industrial-cover-${index + 1}`;
     cover.position.set(x, h / 2, z);
     cover.castShadow = true;
     cover.receiveShadow = true;
@@ -99,6 +229,27 @@ export function buildWorld(scene) {
     );
     topMark.position.set(x, h + 0.035, z);
     scene.add(topMark);
+
+    // Raised steel seams and occasional amber hazard bands break up the
+    // prototype's plain boxes while staying flush with their collision faces.
+    const bandMaterial = index % 3 === 0 ? crateHazardMat : crateBandMat;
+    for (const y of [0.3, Math.max(0.55, h - 0.42)]) {
+      const frontBand = new THREE.Mesh(
+        new THREE.BoxGeometry(Math.max(0.2, w - 0.12), 0.075, 0.055),
+        bandMaterial
+      );
+      frontBand.position.set(x, y, z + d / 2 + 0.018);
+      const backBand = frontBand.clone();
+      backBand.position.z = z - d / 2 - 0.018;
+      const sideBand = new THREE.Mesh(
+        new THREE.BoxGeometry(0.055, 0.075, Math.max(0.2, d - 0.12)),
+        bandMaterial
+      );
+      sideBand.position.set(x + w / 2 + 0.018, y, z);
+      const otherSideBand = sideBand.clone();
+      otherSideBand.position.x = x - w / 2 - 0.018;
+      scene.add(frontBand, backBand, sideBand, otherSideBand);
+    }
     colliders.push({ minX: x - w / 2, maxX: x + w / 2, minZ: z - d / 2, maxZ: z + d / 2 });
   }
 

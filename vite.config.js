@@ -28,5 +28,17 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     chunkSizeWarningLimit: 600,
+    // Keep Three.js cacheable separately from the game shell so later UI/gameplay
+    // updates do not force every device to download the rendering runtime again.
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          minSize: 20000,
+          groups: [
+            { name: 'three-vendor', test: /node_modules\/three\// },
+          ],
+        },
+      },
+    },
   },
 });

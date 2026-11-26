@@ -28,6 +28,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+          cache: gradle
+          cache-dependency-path: |
+            android/**/*.gradle*
+            android/gradle.properties
+            android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
@@ -51,10 +56,16 @@ jobs:
         working-directory: android
         run: ./gradlew --no-daemon assembleDebug
 
-      - name: Upload APK for testing
+      - name: Generate APK checksum
+        working-directory: android/app/build/outputs/apk/debug
+        run: sha256sum app-debug.apk > app-debug.apk.sha256
+
+      - name: Upload APK and checksum for testing
         uses: actions/upload-artifact@v7
         with:
           name: rage-of-fight-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/debug/app-debug.apk.sha256
           if-no-files-found: error
           retention-days: 14

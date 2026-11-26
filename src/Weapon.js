@@ -160,9 +160,9 @@ export class Weapon {
     for (const w of this.weapons) w.ammo = w.mag;
   }
 
-  reset() {
+  reset(preferredWeaponId = 'rifle') {
     for (const w of this.weapons) {
-      window.clearTimeout(w.reloadTimer);
+      clearTimeout(w.reloadTimer);
       w.ammo = w.mag;
       w.cooldown = 0;
       w.reloading = false;
@@ -170,7 +170,8 @@ export class Weapon {
     }
     this.triggerDown = false;
     this.firedThisPress = false;
-    this.index = 0;
+    const preferredIndex = this.weapons.findIndex((weapon) => weapon.id === preferredWeaponId);
+    this.index = preferredIndex >= 0 ? preferredIndex : 0;
     this.buildViewModel();
   }
 

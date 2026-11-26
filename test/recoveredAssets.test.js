@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { findEnemyFromObject } from '../src/Weapon.js';
 import {
@@ -48,6 +49,13 @@ for (const [weaponId, asset] of Object.entries(RECOVERED_WEAPON_ASSETS)) {
     });
     assert.ok(meshCount > 0, 'OBJ contains at least one mesh');
     assert.ok(vertexCount > 0, 'OBJ contains renderable vertices');
+    object.rotation.set(...asset.rotation);
+    object.updateMatrixWorld(true);
+    const orientedSize = new THREE.Box3().setFromObject(object).getSize(new THREE.Vector3());
+    assert.ok(
+      orientedSize.z >= Math.max(orientedSize.x, orientedSize.y),
+      'the calibrated barrel axis should point down the camera -Z direction'
+    );
 
     const texturePath = resolve(projectRoot, 'public', `.${asset.texture}`);
     assert.equal(readFileSync(texturePath).subarray(0, 8).toString('hex'), '89504e470d0a1a0a', 'texture is a PNG');
