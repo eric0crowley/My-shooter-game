@@ -1,0 +1,43 @@
+# Local dependencies and build output
+node_modules/
+dist/
+
+# Python bytecode/cache
+__pycache__/
+*.py[cod]
+
+# Generated transfer/install packages from earlier APK testing
+/transfer/
+
+# Unity editor-generated data (Unity reconstruction source lives under unity-reconstruction)
+unity-reconstruction/Library/
+unity-reconstruction/Temp/
+unity-reconstruction/Obj/
+unity-reconstruction/Logs/
+unity-reconstruction/UserSettings/
+unity-reconstruction/Builds/
+unity-reconstruction/Assets/Recovered/Meshes/
+unity-reconstruction/Assets/Recovered/GeneratedMeshes/
+unity-reconstruction/Assets/Recovered/Materials/
+unity-reconstruction/Assets/Recovered/Prefabs/
+
+# Capacitor / Android local machine artifacts
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/
+
+# User-provided APKs and extracted IL2CPP metadata stay local, not in Git
+google_drive/
+*.apk
+*.aab
+dump.cs
+il2cpp.h
+script.json
+stringliteral.json
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
+*.log

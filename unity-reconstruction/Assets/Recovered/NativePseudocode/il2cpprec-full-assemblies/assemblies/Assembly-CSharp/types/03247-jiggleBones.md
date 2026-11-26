@@ -1,0 +1,749 @@
+# `jiggleBones` — TypeDefIndex 3247
+
+> **Reconstructed pseudocode only; not original C# source.** Synthetic ABI arguments, `ulong` return values, registers, `RuntimeMemory`/`RuntimeCalls` and control-flow labels come from the native lifter. `exact` is not proof of semantic equivalence or compilability. See [`README.md`](../../../README.md).
+
+## Instance fields from metadata
+
+| Offset | Type | Field |
+|---:|---|---|
+| `0x20` | `bool` | `debugMode` |
+| `0x28` | `Transform` | `targetBone` |
+| `0x30` | `Vector3` | `dynamicPos` |
+| `0x3C` | `Vector3` | `boneAxis` |
+| `0x48` | `float` | `targetDistance` |
+| `0x4C` | `float` | `bStiffness` |
+| `0x50` | `float` | `bMass` |
+| `0x54` | `float` | `bDamping` |
+| `0x58` | `float` | `bGravity` |
+| `0x5C` | `Vector3` | `force` |
+| `0x68` | `Vector3` | `acc` |
+| `0x74` | `Vector3` | `vel` |
+| `0x80` | `bool` | `SquashAndStretch` |
+| `0x84` | `float` | `sideStretch` |
+| `0x88` | `float` | `frontStretch` |
+
+## `jiggleBones.Awake` — RVA `0xc6a6b4`
+
+- Lift status: **exact**; input span: 120 bytes; span to next metadata RVA: 120 bytes.
+- Metadata signature: `private void Awake() { }`
+- Structural verifier: suspect=0, unverifiable=0, unmapped-instructions=9 (informational only).
+
+```csharp
+public static ulong jiggleBones_Awake_RVAc6a6b4(ulong x0, ulong x1, ulong x2, ulong x3, ulong x4, ulong x5, ulong x6, ulong x7)
+    {
+        ulong __arm64_load_address_13018912 = default(ulong);
+        ulong __arm64_pair_address_13018808 = default(ulong);
+        ulong __arm64_pair_address_13018852 = default(ulong);
+        ulong __arm64_pair_address_13018856 = default(ulong);
+        ulong __arm64_pair_address_13018896 = default(ulong);
+        ulong __arm64_pair_address_13018908 = default(ulong);
+        ulong sp = default(ulong);
+        RuntimeVector128 v0 = default(RuntimeVector128);
+        RuntimeVector128 v1 = default(RuntimeVector128);
+        RuntimeVector128 v10 = default(RuntimeVector128);
+        RuntimeVector128 v2 = default(RuntimeVector128);
+        RuntimeVector128 v3 = default(RuntimeVector128);
+        RuntimeVector128 v4 = default(RuntimeVector128);
+        RuntimeVector128 v8 = default(RuntimeVector128);
+        RuntimeVector128 v9 = default(RuntimeVector128);
+        ulong x19 = default(ulong);
+        ulong x30 = default(ulong);
+        RuntimeMemory.WriteF64(unchecked((ulong)((sp) + (0xFFFFFFFFFFFFFFD0UL))), global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v10.GetUInt64(0)))));
+        sp = unchecked((ulong)((sp) + (0xFFFFFFFFFFFFFFD0UL)));
+        __arm64_pair_address_13018808 = unchecked((ulong)((sp) + (0x10UL)));
+        RuntimeMemory.WriteF64(__arm64_pair_address_13018808, global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v9.GetUInt64(0)))));
+        RuntimeMemory.WriteF64(unchecked((ulong)((__arm64_pair_address_13018808) + (0x8UL))), global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v8.GetUInt64(0)))));
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x20UL)))) + (0x0UL))), x30);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x20UL)))) + (0x8UL))), x19);
+        x19 = x0;
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x0) + (0x28UL))));
+        if ((x0 == 0x0UL))
+        {
+        }
+        else
+        {
+            x1 = 0x0UL;
+            x0 = RuntimeCalls.InvokeDirect(0x179D508UL /* metadata target: Transform.get_position */, x0, x1, x2, x3);
+            x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x19) + (0x28UL))));
+            if ((x0 == 0x0UL))
+            {
+            }
+            else
+            {
+                v8 = v0;
+                v9 = v1;
+                __arm64_pair_address_13018852 = unchecked((ulong)((x19) + (0x44UL)));
+                v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13018852)), 0));
+                v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13018852) + (0x4UL))))), 0));
+                __arm64_pair_address_13018856 = unchecked((ulong)((x19) + (0x3CUL)));
+                v4 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13018856)), 0));
+                v3 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13018856) + (0x4UL))))), 0));
+                v10 = v2;
+                x1 = 0x0UL;
+                v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+                v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v3.GetUInt64(0)))), 0))))), 0));
+                v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v4.GetUInt64(0)))), 0))))), 0));
+                x0 = RuntimeCalls.InvokeDirect(0x179E01CUL /* metadata target: Transform.TransformDirection */, x0, x1, x2, x3);
+                v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v8.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0))))), 0));
+                v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v9.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+                v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v10.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0))))), 0));
+                __arm64_pair_address_13018896 = unchecked((ulong)((x19) + (0x30UL)));
+                RuntimeMemory.WriteF32(__arm64_pair_address_13018896, global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0));
+                RuntimeMemory.WriteF32(unchecked((ulong)((__arm64_pair_address_13018896) + (0x4UL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0));
+                RuntimeMemory.WriteF32(unchecked((ulong)((x19) + (0x38UL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0));
+                x30 = RuntimeMemory.ReadU64(unchecked((ulong)((sp) + (0x20UL))));
+                x19 = RuntimeMemory.ReadU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x20UL)))) + (0x8UL))));
+                __arm64_pair_address_13018908 = unchecked((ulong)((sp) + (0x10UL)));
+                v9 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(__arm64_pair_address_13018908)), 0));
+                v8 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(unchecked((ulong)((__arm64_pair_address_13018908) + (0x8UL))))), 0));
+                __arm64_load_address_13018912 = sp;
+                v10 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(__arm64_load_address_13018912)), 0));
+                return x0;
+            }
+        }
+        label_0xC6A728:
+        ;
+        x0 = RuntimeCalls.InvokeDirect(0xB7DB74UL, x0, x1, x2, x3);
+        return default(ulong);
+    }
+```
+
+## `jiggleBones.LateUpdate` — RVA `0xc6a72c`
+
+- Lift status: **exact**; input span: 1140 bytes; span to next metadata RVA: 1140 bytes.
+- Metadata signature: `private void LateUpdate() { }`
+- Structural verifier: suspect=0, unverifiable=0, unmapped-instructions=112 (informational only).
+
+```csharp
+public static ulong jiggleBones_LateUpdate_RVAc6a72c(ulong x0, ulong x1, ulong x2, ulong x3, ulong x4, ulong x5, ulong x6, ulong x7)
+    {
+        float __arm64_float_flags_left_13019496 = default(float);
+        float __arm64_float_flags_left_13019560 = default(float);
+        float __arm64_float_flags_left_13019608 = default(float);
+        float __arm64_float_flags_right_13019496 = default(float);
+        float __arm64_float_flags_right_13019560 = default(float);
+        float __arm64_float_flags_right_13019608 = default(float);
+        ulong __arm64_pair_address_13018928 = default(ulong);
+        ulong __arm64_pair_address_13018932 = default(ulong);
+        ulong __arm64_pair_address_13018936 = default(ulong);
+        ulong __arm64_pair_address_13018940 = default(ulong);
+        ulong __arm64_pair_address_13019028 = default(ulong);
+        ulong __arm64_pair_address_13019032 = default(ulong);
+        ulong __arm64_pair_address_13019064 = default(ulong);
+        ulong __arm64_pair_address_13019136 = default(ulong);
+        ulong __arm64_pair_address_13019140 = default(ulong);
+        ulong __arm64_pair_address_13019168 = default(ulong);
+        ulong __arm64_pair_address_13019172 = default(ulong);
+        ulong __arm64_pair_address_13019184 = default(ulong);
+        ulong __arm64_pair_address_13019204 = default(ulong);
+        ulong __arm64_pair_address_13019208 = default(ulong);
+        ulong __arm64_pair_address_13019276 = default(ulong);
+        ulong __arm64_pair_address_13019292 = default(ulong);
+        ulong __arm64_pair_address_13019300 = default(ulong);
+        ulong __arm64_pair_address_13019316 = default(ulong);
+        ulong __arm64_pair_address_13019336 = default(ulong);
+        ulong __arm64_pair_address_13019384 = default(ulong);
+        ulong __arm64_pair_address_13019732 = default(ulong);
+        ulong __arm64_pair_address_13019884 = default(ulong);
+        ulong __arm64_pair_address_13019908 = default(ulong);
+        ulong __arm64_pair_address_13019932 = default(ulong);
+        ulong __arm64_pair_address_13019984 = default(ulong);
+        ulong __arm64_pair_address_13020036 = default(ulong);
+        ulong __arm64_pair_address_13020040 = default(ulong);
+        ulong __arm64_pair_address_13020044 = default(ulong);
+        ulong __arm64_pair_address_13020048 = default(ulong);
+        ulong sp = default(ulong);
+        RuntimeVector128 v0 = default(RuntimeVector128);
+        RuntimeVector128 v1 = default(RuntimeVector128);
+        RuntimeVector128 v10 = default(RuntimeVector128);
+        RuntimeVector128 v11 = default(RuntimeVector128);
+        RuntimeVector128 v12 = default(RuntimeVector128);
+        RuntimeVector128 v13 = default(RuntimeVector128);
+        RuntimeVector128 v14 = default(RuntimeVector128);
+        RuntimeVector128 v15 = default(RuntimeVector128);
+        RuntimeVector128 v16 = default(RuntimeVector128);
+        RuntimeVector128 v17 = default(RuntimeVector128);
+        RuntimeVector128 v18 = default(RuntimeVector128);
+        RuntimeVector128 v19 = default(RuntimeVector128);
+        RuntimeVector128 v2 = default(RuntimeVector128);
+        RuntimeVector128 v20 = default(RuntimeVector128);
+        RuntimeVector128 v3 = default(RuntimeVector128);
+        RuntimeVector128 v4 = default(RuntimeVector128);
+        RuntimeVector128 v5 = default(RuntimeVector128);
+        RuntimeVector128 v6 = default(RuntimeVector128);
+        RuntimeVector128 v7 = default(RuntimeVector128);
+        RuntimeVector128 v8 = default(RuntimeVector128);
+        RuntimeVector128 v9 = default(RuntimeVector128);
+        ulong x19 = default(ulong);
+        ulong x20 = default(ulong);
+        ulong x21 = default(ulong);
+        ulong x30 = default(ulong);
+        ulong x8 = default(ulong);
+        ulong x9 = default(ulong);
+        sp = unchecked((ulong)((sp) - (0x90UL)));
+        __arm64_pair_address_13018928 = unchecked((ulong)((sp) + (0x30UL)));
+        RuntimeMemory.WriteF64(__arm64_pair_address_13018928, global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v15.GetUInt64(0)))));
+        RuntimeMemory.WriteF64(unchecked((ulong)((__arm64_pair_address_13018928) + (0x8UL))), global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v14.GetUInt64(0)))));
+        __arm64_pair_address_13018932 = unchecked((ulong)((sp) + (0x40UL)));
+        RuntimeMemory.WriteF64(__arm64_pair_address_13018932, global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v13.GetUInt64(0)))));
+        RuntimeMemory.WriteF64(unchecked((ulong)((__arm64_pair_address_13018932) + (0x8UL))), global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v12.GetUInt64(0)))));
+        __arm64_pair_address_13018936 = unchecked((ulong)((sp) + (0x50UL)));
+        RuntimeMemory.WriteF64(__arm64_pair_address_13018936, global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v11.GetUInt64(0)))));
+        RuntimeMemory.WriteF64(unchecked((ulong)((__arm64_pair_address_13018936) + (0x8UL))), global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v10.GetUInt64(0)))));
+        __arm64_pair_address_13018940 = unchecked((ulong)((sp) + (0x60UL)));
+        RuntimeMemory.WriteF64(__arm64_pair_address_13018940, global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v9.GetUInt64(0)))));
+        RuntimeMemory.WriteF64(unchecked((ulong)((__arm64_pair_address_13018940) + (0x8UL))), global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v8.GetUInt64(0)))));
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x70UL)))) + (0x0UL))), x30);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x70UL)))) + (0x8UL))), x21);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x80UL)))) + (0x0UL))), x20);
+        RuntimeMemory.WriteU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x80UL)))) + (0x8UL))), x19);
+        x20 = 0x1BAB000UL;
+        x8 = unchecked((ulong)(unchecked((uint)(RuntimeMemory.ReadU8(unchecked((ulong)((x20) + (0x32EUL))))))));
+        x19 = x0;
+        if ((unchecked((uint)((unchecked((uint)(x8))) & (unchecked((uint)((unchecked((uint)0x1UL)) << (int)(unchecked((int)(unchecked((uint)(0x0UL)))))))))) != unchecked((uint)0x0UL)))
+        {
+            goto label_0xC6A76C;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x0 = 0x1A8C000UL;
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x0) + (0x398UL))));
+        // Likely IL2CPP class initialization helper (guarded call).
+        x0 = RuntimeCalls.InvokeDirect(0xB7D92CUL, x0, x1, x2, x3);
+        x8 = unchecked((ulong)(unchecked((uint)(0x1UL))));
+        RuntimeMemory.WriteU8(unchecked((ulong)((x20) + (0x32EUL))), unchecked((byte)(unchecked((uint)(x8)))));
+        goto label_0xC6A76C;
+        label_0xC6A76C:
+        ;
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x19) + (0x28UL))));
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC6AB9C;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x1 = 0x0UL;
+        x0 = RuntimeCalls.InvokeDirect(0x179D774UL /* metadata target: Transform.set_rotation */, x0, x1, x2, x3);
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x19) + (0x28UL))));
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC6AB9C;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0xC6A794UL);
+        }
+        __arm64_pair_address_13019028 = unchecked((ulong)((x19) + (0x44UL)));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13019028)), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13019028) + (0x4UL))))), 0));
+        __arm64_pair_address_13019032 = unchecked((ulong)((x19) + (0x3CUL)));
+        v4 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13019032)), 0));
+        v3 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13019032) + (0x4UL))))), 0));
+        x1 = 0x0UL;
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v3.GetUInt64(0)))), 0))))), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v4.GetUInt64(0)))), 0))))), 0));
+        x0 = RuntimeCalls.InvokeDirect(0x179E01CUL /* metadata target: Transform.TransformDirection */, x0, x1, x2, x3);
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x19) + (0x28UL))));
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC6AB9C;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0xC6A7B8UL);
+        }
+        __arm64_pair_address_13019064 = unchecked((ulong)((sp) + (0x1CUL)));
+        RuntimeMemory.WriteF32(__arm64_pair_address_13019064, global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0));
+        RuntimeMemory.WriteF32(unchecked((ulong)((__arm64_pair_address_13019064) + (0x4UL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0));
+        RuntimeMemory.WriteF32(unchecked((ulong)((sp) + (0x24UL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0x0UL)), 0)), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0x3F800000UL)), 0)), 0));
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0x0UL)), 0)), 0));
+        x1 = 0x0UL;
+        x0 = RuntimeCalls.InvokeDirect(0x179E01CUL /* metadata target: Transform.TransformDirection */, x0, x1, x2, x3);
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x19) + (0x28UL))));
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC6AB9C;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x1 = 0x0UL;
+        v9 = v0;
+        v10 = v1;
+        v8 = v2;
+        x0 = RuntimeCalls.InvokeDirect(0x179D508UL /* metadata target: Transform.get_position */, x0, x1, x2, x3);
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x19) + (0x28UL))));
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC6AB9C;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        v11 = v0;
+        v12 = v1;
+        __arm64_pair_address_13019136 = unchecked((ulong)((x19) + (0x44UL)));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13019136)), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13019136) + (0x4UL))))), 0));
+        __arm64_pair_address_13019140 = unchecked((ulong)((x19) + (0x3CUL)));
+        v4 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13019140)), 0));
+        v3 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13019140) + (0x4UL))))), 0));
+        v13 = v2;
+        x1 = 0x0UL;
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v3.GetUInt64(0)))), 0))))), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v4.GetUInt64(0)))), 0))))), 0));
+        x0 = RuntimeCalls.InvokeDirect(0x179E01CUL /* metadata target: Transform.TransformDirection */, x0, x1, x2, x3);
+        __arm64_pair_address_13019168 = unchecked((ulong)((x19) + (0x30UL)));
+        v3 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13019168)), 0));
+        v4 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13019168) + (0x4UL))))), 0));
+        __arm64_pair_address_13019172 = unchecked((ulong)((x19) + (0x54UL)));
+        v5 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13019172)), 0));
+        v6 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13019172) + (0x4UL))))), 0));
+        v19 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v11.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0))))), 0));
+        v20 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v12.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        __arm64_pair_address_13019184 = unchecked((ulong)((x19) + (0x4CUL)));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13019184)), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13019184) + (0x4UL))))), 0));
+        v18 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x38UL))))), 0));
+        v13 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v13.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0))))), 0));
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0x3F800000UL)), 0)), 0));
+        v7 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0xC1200000UL)), 0)), 0));
+        __arm64_pair_address_13019204 = unchecked((ulong)((x19) + (0x74UL)));
+        v16 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13019204)), 0));
+        v17 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13019204) + (0x4UL))))), 0));
+        __arm64_pair_address_13019208 = unchecked((ulong)((sp) + (0x28UL)));
+        RuntimeMemory.WriteF32(__arm64_pair_address_13019208, global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v20.GetUInt64(0)))), 0));
+        RuntimeMemory.WriteF32(unchecked((ulong)((__arm64_pair_address_13019208) + (0x4UL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v19.GetUInt64(0)))), 0));
+        v19 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v19.GetUInt64(0)))), 0)) - (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v3.GetUInt64(0)))), 0))))), 0));
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0)) - (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v5.GetUInt64(0)))), 0))))), 0));
+        v5 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v20.GetUInt64(0)))), 0)) - (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v4.GetUInt64(0)))), 0))))), 0));
+        v6 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v6.GetUInt64(0)))), 0)) / (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v7.GetUInt64(0)))), 0))))), 0));
+        v7 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v13.GetUInt64(0)))), 0)) - (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v18.GetUInt64(0)))), 0))))), 0));
+        v19 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v19.GetUInt64(0)))), 0))))), 0));
+        v5 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v5.GetUInt64(0)))), 0))))), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v7.GetUInt64(0)))), 0))))), 0));
+        v7 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v19.GetUInt64(0)))), 0)) / (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        v5 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v5.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v6.GetUInt64(0)))), 0))))), 0));
+        v6 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) / (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        v20 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v7.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0))))), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v5.GetUInt64(0)))), 0)) / (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        v16 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v16.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v20.GetUInt64(0)))), 0))))), 0));
+        v20 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v6.GetUInt64(0)))), 0))))), 0));
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        __arm64_pair_address_13019276 = unchecked((ulong)((x19) + (0x6CUL)));
+        RuntimeMemory.WriteF32(__arm64_pair_address_13019276, global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0));
+        RuntimeMemory.WriteF32(unchecked((ulong)((__arm64_pair_address_13019276) + (0x4UL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v6.GetUInt64(0)))), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x7CUL))))), 0));
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x19) + (0x28UL))));
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v17.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0))))), 0));
+        __arm64_pair_address_13019292 = unchecked((ulong)((x19) + (0x5CUL)));
+        RuntimeMemory.WriteF32(__arm64_pair_address_13019292, global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v19.GetUInt64(0)))), 0));
+        RuntimeMemory.WriteF32(unchecked((ulong)((__arm64_pair_address_13019292) + (0x4UL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v5.GetUInt64(0)))), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v20.GetUInt64(0)))), 0))))), 0));
+        __arm64_pair_address_13019300 = unchecked((ulong)((x19) + (0x78UL)));
+        RuntimeMemory.WriteF32(__arm64_pair_address_13019300, global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0));
+        RuntimeMemory.WriteF32(unchecked((ulong)((__arm64_pair_address_13019300) + (0x4UL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0));
+        v6 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v19.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v16.GetUInt64(0)))), 0))))), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        v5 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v5.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0))))), 0));
+        __arm64_pair_address_13019316 = unchecked((ulong)((x19) + (0x64UL)));
+        RuntimeMemory.WriteF32(__arm64_pair_address_13019316, global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0));
+        RuntimeMemory.WriteF32(unchecked((ulong)((__arm64_pair_address_13019316) + (0x4UL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v7.GetUInt64(0)))), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v3.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v6.GetUInt64(0)))), 0))))), 0));
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v18.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v4.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v5.GetUInt64(0)))), 0))))), 0));
+        RuntimeMemory.WriteF32(unchecked((ulong)((x19) + (0x74UL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v16.GetUInt64(0)))), 0));
+        __arm64_pair_address_13019336 = unchecked((ulong)((x19) + (0x30UL)));
+        RuntimeMemory.WriteF32(__arm64_pair_address_13019336, global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0));
+        RuntimeMemory.WriteF32(unchecked((ulong)((__arm64_pair_address_13019336) + (0x4UL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0));
+        RuntimeMemory.WriteF32(unchecked((ulong)((x19) + (0x38UL))), global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0));
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC6AB9C;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x1 = 0x0UL;
+        x0 = RuntimeCalls.InvokeDirect(0x179E640UL /* metadata target: Transform.LookAt */, x0, x1, x2, x3);
+        x8 = unchecked((ulong)(unchecked((uint)(RuntimeMemory.ReadU8(unchecked((ulong)((x19) + (0x80UL))))))));
+        if ((unchecked((uint)(x8)) == unchecked((uint)0x0UL)))
+        {
+            goto label_0xC6AA14;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x20 = 0x1BAB000UL;
+        v12 = v8;
+        __arm64_pair_address_13019384 = unchecked((ulong)((x19) + (0x30UL)));
+        v8 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13019384)), 0));
+        v14 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13019384) + (0x4UL))))), 0));
+        x8 = unchecked((ulong)(unchecked((uint)(RuntimeMemory.ReadU8(unchecked((ulong)((x20) + (0x3DFUL))))))));
+        v15 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x38UL))))), 0));
+        v11 = v10;
+        v10 = v9;
+        if ((unchecked((uint)(x8)) != unchecked((uint)0x0UL)))
+        {
+            goto label_0xC6A924;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x0 = 0x1A8C000UL;
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x0) + (0xA60UL))));
+        // Likely IL2CPP class initialization helper (guarded call).
+        x0 = RuntimeCalls.InvokeDirect(0xB7D92CUL, x0, x1, x2, x3);
+        x8 = unchecked((ulong)(unchecked((uint)(0x1UL))));
+        RuntimeMemory.WriteU8(unchecked((ulong)((x20) + (0x3DFUL))), unchecked((byte)(unchecked((uint)(x8)))));
+        goto label_0xC6A924;
+        label_0xC6A924:
+        ;
+        x8 = 0x1A8C000UL;
+        x8 = RuntimeMemory.ReadU64(unchecked((ulong)((x8) + (0xA60UL))));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((sp) + (0x2CUL))))), 0));
+        x0 = RuntimeMemory.ReadU64(x8);
+        v9 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v8.GetUInt64(0)))), 0)) - (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0))))), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((sp) + (0x28UL))))), 0));
+        v8 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v15.GetUInt64(0)))), 0)) - (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v13.GetUInt64(0)))), 0))))), 0));
+        x8 = unchecked((ulong)(RuntimeMemory.ReadU32(unchecked((ulong)((x0) + (0xE0UL))))));
+        v14 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v14.GetUInt64(0)))), 0)) - (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0))))), 0));
+        if ((unchecked((uint)(x8)) != unchecked((uint)0x0UL)))
+        {
+            goto label_0xC6A950;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0xC6A94CUL);
+        }
+        x0 = RuntimeCalls.InvokeDirect(0xB7DA5CUL, x0, x1, x2, x3);
+        goto label_0xC6A950;
+        label_0xC6A950:
+        ;
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x3CUL))))), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v9.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v9.GetUInt64(0)))), 0))))), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v14.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v14.GetUInt64(0)))), 0))))), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v8.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v8.GetUInt64(0)))), 0))))), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        __arm64_float_flags_left_13019496 = global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0);
+        __arm64_float_flags_right_13019496 = global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0x0UL)), 0);
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)(global::System.Math.Sqrt(unchecked((double)(global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0))))))), 0));
+        if (((__arm64_float_flags_left_13019496 != __arm64_float_flags_right_13019496) || ((__arm64_float_flags_left_13019496 != __arm64_float_flags_left_13019496) || (__arm64_float_flags_right_13019496 != __arm64_float_flags_right_13019496))))
+        {
+            goto label_0xC6A988;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0xC6A974UL);
+        }
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x84UL))))), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0x3F800000UL)), 0)), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0))))), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0)) - (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0))))), 0));
+        goto label_0xC6A998;
+        label_0xC6A988:
+        ;
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x88UL))))), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0x3F800000UL)), 0)), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0))))), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v0.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        goto label_0xC6A998;
+        label_0xC6A998:
+        ;
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x40UL))))), 0));
+        v9 = v10;
+        v8 = v12;
+        v10 = v11;
+        __arm64_float_flags_left_13019560 = global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0);
+        __arm64_float_flags_right_13019560 = global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0x0UL)), 0);
+        if (((__arm64_float_flags_left_13019560 != __arm64_float_flags_right_13019560) || ((__arm64_float_flags_left_13019560 != __arm64_float_flags_left_13019560) || (__arm64_float_flags_right_13019560 != __arm64_float_flags_right_13019560))))
+        {
+            goto label_0xC6A9C4;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0xC6A9B0UL);
+        }
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x84UL))))), 0));
+        v3 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0x3F800000UL)), 0)), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v3.GetUInt64(0)))), 0)) - (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        goto label_0xC6A9D4;
+        label_0xC6A9C4:
+        ;
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x88UL))))), 0));
+        v3 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0x3F800000UL)), 0)), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0))))), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v1.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v3.GetUInt64(0)))), 0))))), 0));
+        goto label_0xC6A9D4;
+        label_0xC6A9D4:
+        ;
+        v3 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x44UL))))), 0));
+        __arm64_float_flags_left_13019608 = global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v3.GetUInt64(0)))), 0);
+        __arm64_float_flags_right_13019608 = global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0x0UL)), 0);
+        if (((__arm64_float_flags_left_13019608 != __arm64_float_flags_right_13019608) || ((__arm64_float_flags_left_13019608 != __arm64_float_flags_left_13019608) || (__arm64_float_flags_right_13019608 != __arm64_float_flags_right_13019608))))
+        {
+            goto label_0xC6A9F4;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0xC6A9E0UL);
+        }
+        v3 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x84UL))))), 0));
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v3.GetUInt64(0)))), 0))))), 0));
+        v3 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0x3F800000UL)), 0)), 0));
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v3.GetUInt64(0)))), 0)) - (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0))))), 0));
+        goto label_0xC6AA04;
+        label_0xC6A9F4:
+        ;
+        v3 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x88UL))))), 0));
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0)) * (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v3.GetUInt64(0)))), 0))))), 0));
+        v3 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)0x3F800000UL)), 0)), 0));
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(unchecked((float)((global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v2.GetUInt64(0)))), 0)) + (global::System.BitConverter.ToSingle(global::System.BitConverter.GetBytes(unchecked((uint)(v3.GetUInt64(0)))), 0))))), 0));
+        goto label_0xC6AA04;
+        label_0xC6AA04:
+        ;
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x19) + (0x28UL))));
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC6AB9C;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x1 = 0x0UL;
+        x0 = RuntimeCalls.InvokeDirect(0x179DBE0UL /* metadata target: Transform.set_localScale */, x0, x1, x2, x3);
+        goto label_0xC6AA14;
+        label_0xC6AA14:
+        ;
+        x8 = unchecked((ulong)(unchecked((uint)(RuntimeMemory.ReadU8(unchecked((ulong)((x19) + (0x20UL))))))));
+        if ((unchecked((uint)(x8)) == unchecked((uint)0x0UL)))
+        {
+            goto label_0xC6AB7C;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x19) + (0x28UL))));
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC6AB9C;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x20 = 0x1A8C000UL;
+        x20 = RuntimeMemory.ReadU64(unchecked((ulong)((x20) + (0x398UL))));
+        x1 = 0x0UL;
+        v11 = v8;
+        x0 = RuntimeCalls.InvokeDirect(0x179D508UL /* metadata target: Transform.get_position */, x0, x1, x2, x3);
+        x0 = RuntimeMemory.ReadU64(x20);
+        v15 = v0;
+        v14 = v1;
+        v8 = v2;
+        x8 = unchecked((ulong)(RuntimeMemory.ReadU32(unchecked((ulong)((x0) + (0xE0UL))))));
+        if ((unchecked((uint)(x8)) != unchecked((uint)0x0UL)))
+        {
+            goto label_0xC6AA54;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0xC6AA50UL);
+        }
+        x0 = RuntimeCalls.InvokeDirect(0xB7DA5CUL, x0, x1, x2, x3);
+        goto label_0xC6AA54;
+        label_0xC6AA54:
+        ;
+        __arm64_pair_address_13019732 = unchecked((ulong)((sp) + (0x20UL)));
+        v4 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13019732)), 0));
+        v3 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13019732) + (0x4UL))))), 0));
+        v5 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((sp) + (0x1CUL))))), 0));
+        x8 = 0x3F8000003F800000UL;
+        x0 = 0x0UL;
+        RuntimeMemory.WritePtr(unchecked((ulong)((sp) + (0x0UL))), 0x0UL);
+        RuntimeMemory.WriteU64(unchecked((ulong)((sp) + (0x8UL))), x8);
+        x0 = RuntimeCalls.InvokeDirect(0x1770948UL /* metadata target: Debug.DrawRay */, x0, x1, x2, x3);
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x19) + (0x28UL))));
+        if ((x0 == 0x0UL))
+        {
+            goto label_0xC6AB9C;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x1 = 0x0UL;
+        x0 = RuntimeCalls.InvokeDirect(0x179D508UL /* metadata target: Transform.get_position */, x0, x1, x2, x3);
+        x8 = 0x3F80000000000000UL;
+        x0 = 0x0UL;
+        RuntimeMemory.WriteU64(unchecked((ulong)((sp) + (0x0UL))), x8);
+        RuntimeMemory.WriteU64(unchecked((ulong)((sp) + (0x8UL))), x8);
+        x0 = RuntimeCalls.InvokeDirect(0x1770948UL /* metadata target: Debug.DrawRay */, x0, x1, x2, x3);
+        x20 = 0x1BAB000UL;
+        x8 = unchecked((ulong)(unchecked((uint)(RuntimeMemory.ReadU8(unchecked((ulong)((x20) + (0x32CUL))))))));
+        if ((unchecked((uint)(x8)) != unchecked((uint)0x0UL)))
+        {
+            goto label_0xC6AAC4;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x0 = 0x1A8C000UL;
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x0) + (0x1E8UL))));
+        // Likely IL2CPP class initialization helper (guarded call).
+        x0 = RuntimeCalls.InvokeDirect(0xB7D92CUL, x0, x1, x2, x3);
+        x8 = unchecked((ulong)(unchecked((uint)(0x1UL))));
+        RuntimeMemory.WriteU8(unchecked((ulong)((x20) + (0x32CUL))), unchecked((byte)(unchecked((uint)(x8)))));
+        goto label_0xC6AAC4;
+        label_0xC6AAC4:
+        ;
+        x21 = 0x1A8C000UL;
+        x21 = RuntimeMemory.ReadU64(unchecked((ulong)((x21) + (0x1E8UL))));
+        x9 = 0x432000UL;
+        v14 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x9) + (0x4F4UL))))), 0));
+        x9 = 0x3F800000UL;
+        x8 = RuntimeMemory.ReadU64(x21);
+        x9 = unchecked((ulong)((unchecked((ulong)((x9) & ((~(0xFFFFUL)))))) | (unchecked((ulong)((unchecked((ulong)((0xEBECUL) << (int)(unchecked((int)(0x20UL)))))) << (int)(unchecked((int)(0x0UL))))))));
+        x9 = unchecked((ulong)((unchecked((ulong)((x9) & ((~(0xFFFFUL)))))) | (unchecked((ulong)((unchecked((ulong)((0x3F6BUL) << (int)(unchecked((int)(0x30UL)))))) << (int)(unchecked((int)(0x0UL))))))));
+        x0 = 0x0UL;
+        x8 = RuntimeMemory.ReadU64(unchecked((ulong)((x8) + (0xB8UL))));
+        __arm64_pair_address_13019884 = unchecked((ulong)((x8) + (0x18UL)));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13019884)), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13019884) + (0x4UL))))), 0));
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x8) + (0x20UL))))), 0));
+        x8 = 0x8081UL;
+        x8 = unchecked((ulong)((unchecked((ulong)((x8) & ((~(0xFFFFUL)))))) | (unchecked((ulong)((unchecked((ulong)((0x3C80UL) << (int)(unchecked((int)(0x10UL)))))) << (int)(unchecked((int)(0x0UL))))))));
+        __arm64_pair_address_13019908 = unchecked((ulong)((sp) + (0x28UL)));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13019908)), 0));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13019908) + (0x4UL))))), 0));
+        x8 = unchecked((ulong)((unchecked((ulong)((x8) & ((~(0xFFFFUL)))))) | (unchecked((ulong)((unchecked((ulong)((0x3F80UL) << (int)(unchecked((int)(0x30UL)))))) << (int)(unchecked((int)(0x0UL))))))));
+        RuntimeMemory.WriteU64(unchecked((ulong)((sp) + (0x0UL))), x9);
+        RuntimeMemory.WriteU64(unchecked((ulong)((sp) + (0x8UL))), x8);
+        x0 = RuntimeCalls.InvokeDirect(0x1770948UL /* metadata target: Debug.DrawRay */, x0, x1, x2, x3);
+        __arm64_pair_address_13019932 = unchecked((ulong)((x19) + (0x30UL)));
+        v8 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13019932)), 0));
+        v9 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13019932) + (0x4UL))))), 0));
+        x8 = unchecked((ulong)(unchecked((uint)(RuntimeMemory.ReadU8(unchecked((ulong)((x20) + (0x32CUL))))))));
+        v10 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x19) + (0x38UL))))), 0));
+        if ((unchecked((uint)(x8)) != unchecked((uint)0x0UL)))
+        {
+            goto label_0xC6AB40;
+        }
+        else
+        {
+            return RuntimeCalls.InvokeDirect(0x0UL);
+        }
+        x0 = 0x1A8C000UL;
+        x0 = RuntimeMemory.ReadU64(unchecked((ulong)((x0) + (0x1E8UL))));
+        // Likely IL2CPP class initialization helper (guarded call).
+        x0 = RuntimeCalls.InvokeDirect(0xB7D92CUL, x0, x1, x2, x3);
+        x8 = unchecked((ulong)(unchecked((uint)(0x1UL))));
+        RuntimeMemory.WriteU8(unchecked((ulong)((x20) + (0x32CUL))), unchecked((byte)(unchecked((uint)(x8)))));
+        goto label_0xC6AB40;
+        label_0xC6AB40:
+        ;
+        x8 = RuntimeMemory.ReadU64(x21);
+        x9 = unchecked((ulong)(unchecked((uint)(0x3F800000UL))));
+        x0 = 0x0UL;
+        x8 = RuntimeMemory.ReadU64(unchecked((ulong)((x8) + (0xB8UL))));
+        __arm64_pair_address_13019984 = unchecked((ulong)((x8) + (0x18UL)));
+        v0 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(__arm64_pair_address_13019984)), 0));
+        v1 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((__arm64_pair_address_13019984) + (0x4UL))))), 0));
+        v2 = RuntimeVector128.Zero.WithUInt32(0, global::System.BitConverter.ToUInt32(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF32(unchecked((ulong)((x8) + (0x20UL))))), 0));
+        x8 = 0x3F80000000000000UL;
+        RuntimeMemory.WriteU64(unchecked((ulong)((sp) + (0x0UL))), unchecked((ulong)(unchecked((uint)(x9)))));
+        RuntimeMemory.WriteU64(unchecked((ulong)((sp) + (0x8UL))), x8);
+        x0 = RuntimeCalls.InvokeDirect(0x1770948UL /* metadata target: Debug.DrawRay */, x0, x1, x2, x3);
+        goto label_0xC6AB7C;
+        label_0xC6AB7C:
+        ;
+        x20 = RuntimeMemory.ReadU64(unchecked((ulong)((sp) + (0x80UL))));
+        x19 = RuntimeMemory.ReadU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x80UL)))) + (0x8UL))));
+        x30 = RuntimeMemory.ReadU64(unchecked((ulong)((sp) + (0x70UL))));
+        x21 = RuntimeMemory.ReadU64(unchecked((ulong)((unchecked((ulong)((sp) + (0x70UL)))) + (0x8UL))));
+        __arm64_pair_address_13020036 = unchecked((ulong)((sp) + (0x60UL)));
+        v9 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(__arm64_pair_address_13020036)), 0));
+        v8 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(unchecked((ulong)((__arm64_pair_address_13020036) + (0x8UL))))), 0));
+        __arm64_pair_address_13020040 = unchecked((ulong)((sp) + (0x50UL)));
+        v11 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(__arm64_pair_address_13020040)), 0));
+        v10 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(unchecked((ulong)((__arm64_pair_address_13020040) + (0x8UL))))), 0));
+        __arm64_pair_address_13020044 = unchecked((ulong)((sp) + (0x40UL)));
+        v13 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(__arm64_pair_address_13020044)), 0));
+        v12 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(unchecked((ulong)((__arm64_pair_address_13020044) + (0x8UL))))), 0));
+        __arm64_pair_address_13020048 = unchecked((ulong)((sp) + (0x30UL)));
+        v15 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(__arm64_pair_address_13020048)), 0));
+        v14 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(unchecked((ulong)((__arm64_pair_address_13020048) + (0x8UL))))), 0));
+        return x0;
+        label_0xC6AB9C:
+        ;
+        x0 = RuntimeCalls.InvokeDirect(0xB7DB74UL, x0, x1, x2, x3);
+        return default(ulong);
+    }
+```
+
+## `jiggleBones.ctor` — RVA `0xc6aba0`
+
+- Lift status: **exact**; input span: 52 bytes; span to next metadata RVA: 52 bytes.
+- Metadata signature: `public void .ctor() { }`
+- Structural verifier: suspect=0, unverifiable=0, unmapped-instructions=5 (informational only).
+
+```csharp
+public static ulong jiggleBones_ctor_RVAc6aba0(ulong x0, ulong x1, ulong x2, ulong x3, ulong x4, ulong x5, ulong x6, ulong x7)
+    {
+        RuntimeVector128 v0 = default(RuntimeVector128);
+        RuntimeVector128 v1 = default(RuntimeVector128);
+        RuntimeVector128 v2 = default(RuntimeVector128);
+        ulong x10 = default(ulong);
+        ulong x11 = default(ulong);
+        ulong x8 = default(ulong);
+        ulong x9 = default(ulong);
+        x9 = 0x432000UL;
+        x10 = 0x432000UL;
+        x11 = 0x431000UL;
+#if IL2CPPREC_RUNTIME_VECTOR128
+        v0 = RuntimeMemory.ReadVector128(unchecked((ulong)((x9) + (0xF00UL))));
+#else
+        v0 = __ReadVector128(unchecked((ulong)((x9) + (0xF00UL))));
+#endif
+#if IL2CPPREC_RUNTIME_VECTOR128
+        v1 = RuntimeMemory.ReadVector128(unchecked((ulong)((x10) + (0x770UL))));
+#else
+        v1 = __ReadVector128(unchecked((ulong)((x10) + (0x770UL))));
+#endif
+        v2 = RuntimeVector128.Zero.WithUInt64(0, global::System.BitConverter.ToUInt64(global::System.BitConverter.GetBytes(RuntimeMemory.ReadF64(unchecked((ulong)((x11) + (0xFB0UL))))), 0));
+        x8 = unchecked((ulong)(unchecked((uint)(0x1UL))));
+        x1 = 0x0UL;
+        RuntimeMemory.WriteU8(unchecked((ulong)((x0) + (0x20UL))), unchecked((byte)(unchecked((uint)(x8)))));
+#if IL2CPPREC_RUNTIME_VECTOR128
+        RuntimeMemory.WriteVector128(unchecked((ulong)((x0) + (0x3CUL))), v0);
+#else
+        __WriteVector128(unchecked((ulong)((x0) + (0x3CUL))), v0);
+#endif
+#if IL2CPPREC_RUNTIME_VECTOR128
+        RuntimeMemory.WriteVector128(unchecked((ulong)((x0) + (0x4CUL))), v1);
+#else
+        __WriteVector128(unchecked((ulong)((x0) + (0x4CUL))), v1);
+#endif
+        RuntimeMemory.WriteF64(unchecked((ulong)((x0) + (0x84UL))), global::System.BitConverter.Int64BitsToDouble(unchecked((long)(v2.GetUInt64(0)))));
+        return RuntimeCalls.InvokeDirect(0x1796274UL /* metadata target: MonoBehaviour.ctor */);
+        return default(ulong);
+    }
+```
