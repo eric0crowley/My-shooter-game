@@ -7,6 +7,7 @@ export class SoundEffects {
     this.noiseBuffer = null;
     this.samples = new Map();
     this.samplesLoading = null;
+    this.masterVolume = 0.32;
   }
 
   async unlock() {
@@ -15,7 +16,7 @@ export class SoundEffects {
     if (!this.context) {
       this.context = new AudioContextClass();
       this.master = this.context.createGain();
-      this.master.gain.value = 0.32;
+      this.master.gain.value = this.masterVolume;
       this.master.connect(this.context.destination);
       this.noiseBuffer = this.context.createBuffer(1, Math.floor(this.context.sampleRate * 0.22), this.context.sampleRate);
       const samples = this.noiseBuffer.getChannelData(0);
@@ -24,6 +25,14 @@ export class SoundEffects {
     if (this.context.state === 'suspended') await this.context.resume();
     if (!this.samplesLoading) this.samplesLoading = this.loadRecoveredSamples();
     return true;
+  }
+
+  setMasterVolume(volume) {
+    const value = Number(volume);
+    this.masterVolume = Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0.32;
+    if (this.master && this.context) {
+      this.master.gain.setTargetAtTime(this.masterVolume, this.context.currentTime, 0.02);
+    }
   }
 
   async loadRecoveredSamples() {

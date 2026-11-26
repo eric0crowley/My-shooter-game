@@ -23,10 +23,11 @@ export function findEnemyFromObject(object) {
 }
 
 export class Weapon {
-  constructor(camera, scene, getEnemyMeshes) {
+  constructor(camera, scene, getEnemyMeshes, owner = null) {
     this.camera = camera;
     this.scene = scene;
     this.getEnemyMeshes = getEnemyMeshes;
+    this.owner = owner;
 
     this.weapons = WEAPONS.map((w) => ({ ...w, ammo: w.mag, cooldown: 0, reloading: false, reloadTimer: null }));
     this.index = 0;
@@ -235,7 +236,7 @@ export class Weapon {
         if (hit.object.userData && hit.object.userData.part === 'head') dmg *= 2;
         const enemy = findEnemyFromObject(hit.object);
         if (enemy) {
-          enemy.takeDamage(dmg);
+          enemy.takeDamage(dmg, this.owner);
           if (this.onEnemyHit) this.onEnemyHit(enemy, dmg, hit.point);
           hitSomething = true;
         }

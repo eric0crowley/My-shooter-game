@@ -9,6 +9,12 @@ import { HUD } from './HUD.js';
 import { LanTransport, DEFAULT_PORT } from './LanTransport.js';
 import { NetworkPlayers } from './NetworkPlayers.js';
 import { SoundEffects } from './SoundEffects.js';
+import { MatchSession } from './MatchSession.js';
+import {
+  DEFAULT_GAME_SETTINGS,
+  loadGameSettings,
+  saveGameSettings,
+} from './GameSettings.js';
 
 const errorEl = document.getElementById('error');
 function showError(message) {
@@ -26,6 +32,7 @@ window.addEventListener('unhandledrejection', (event) => {
 
 const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches ?? false;
 const isTouchDevice = navigator.maxTouchPoints > 0 || coarsePointer;
+let gameSettings = loadGameSettings();
 document.body.classList.toggle('touch-device', isTouchDevice);
 
 // ---------- Renderer / scene / camera ----------
@@ -42,11 +49,17 @@ try {
   throw error;
 }
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouchDevice ? 1.5 : 2));
+function applyGraphicsQuality(quality = gameSettings.graphicsQuality) {
+  const pixelRatioCap =
+    quality === 'performance' ? 1 : quality === 'quality' ? 2 : isTouchDevice ? 1.5 : 2;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelRatioCap));
+  renderer.shadowMap.enabled =
+    quality === 'quality' || (quality === 'auto' && !isTouchDevice);
+}
+applyGraphicsQuality();
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
-renderer.shadowMap.enabled = !isTouchDevice;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
@@ -54,7 +67,7 @@ scene.background = new THREE.Color(0x101820);
 scene.fog = new THREE.Fog(0x101820, 24, 76);
 
 const camera = new THREE.PerspectiveCamera(
-  75,
+  gameSettings.fieldOfView,
   window.innerWidth / window.innerHeight,
   0.1,
   200
@@ -64,20 +77,49 @@ camera.rotation.order = 'YXZ';
 // ---------- World + actors ----------
 const world = buildWorld(scene);
 const controls = new PointerLockControls(camera, document.body);
+controls.pointerSpeed = gameSettings.lookSensitivity;
 scene.add(camera);
 
 const player = new Player(camera, world.colliders, world.playerSpawn);
-const weapon = new Weapon(camera, scene, () => enemyMgr.getMeshes());
+const weapon = new Weapon(
+  camera,
+  scene,
+  () => enemyMgr.getMeshes(player.team),
+  player
+);
 const enemyMgr = new EnemyManager(
   scene,
   world.enemySpawns,
   world.colliders,
-  world.bounds
+  world.bounds,
+  world.teamSpawns
 );
+const matchSession = new MatchSession();
+let playerRespawnTimer = 0;
+let navigationPromise = null;
+function ensureNavigation() {
+  navigationPromise ??= import('./Navigation.js')
+    .then(({ createNavigationSystem }) =>
+      createNavigationSystem(world.navigationMeshes)
+    )
+    .then((navigation) => {
+      enemyMgr.setNavigation(navigation);
+      return navigation;
+    })
+    .catch((error) => {
+      console.warn(
+        'AI navigation mesh unavailable; using local steering fallback.',
+        error
+      );
+      return null;
+    });
+  return navigationPromise;
+}
 const hud = new HUD();
 const lanTransport = new LanTransport();
 const networkPlayers = new NetworkPlayers(scene);
 const soundEffects = new SoundEffects();
+soundEffects.setMasterVolume(gameSettings.masterVolume);
 const remotePlayerStates = new Map();
 const lanPeers = new Map();
 let activeMode = 'training';
@@ -97,6 +139,7 @@ function updateHud() {
     wave: enemyMgr.wave,
     remainingCount: enemyMgr.remainingCount,
     waveIntermission: enemyMgr.waveIntermission,
+    match: activeMode === 'tdm' ? matchSession.snapshot() : null,
     online: lanRole !== null,
     playerCount: lanRole === 'host' ? lanPeers.size + 1 : remotePlayerStates.size,
   });
@@ -109,7 +152,20 @@ weapon.onHit = () => {
 };
 weapon.onShot = (id) => soundEffects.shot(id);
 weapon.onReload = (id) => soundEffects.reload(id);
-enemyMgr.onKillEvent = () => soundEffects.tone(680, 0.09, 'triangle', 0.06, 920);
+enemyMgr.onKillEvent = (enemy, attacker) => {
+  if (activeMode !== 'tdm' || attacker?.isPlayer)
+    soundEffects.tone(680, 0.09, 'triangle', 0.06, 920);
+  if (activeMode === 'tdm' && attacker?.team) {
+    addKillFeedEntry(attacker, enemy);
+    matchSession.recordKill(attacker.team);
+    if (!scoreboardEl.hidden) renderScoreboard();
+    updateHud();
+    if (matchSession.phase === 'finished') endGame({ playDeathSound: false });
+  }
+};
+enemyMgr.onRespawnEvent = () => {
+  if (!scoreboardEl.hidden) renderScoreboard();
+};
 enemyMgr.onWaveStart = (wave) => soundEffects.waveStart(wave);
 weapon.onEnemyHit = (enemy, amount) => {
   if (lanRole === 'client' && Number.isInteger(enemy.netId)) {
@@ -121,7 +177,7 @@ player.onDamage = () => {
   soundEffects.damage();
   if (isTouchDevice && navigator.vibrate) navigator.vibrate([22, 26, 22]);
 };
-player.onDeath = () => endGame();
+player.onDeath = (attacker) => handlePlayerDeath(attacker);
 
 // ---------- State and input ----------
 const input = {
@@ -154,9 +210,30 @@ let movePointerId = null;
 const startScreen = document.getElementById('start-screen');
 const pauseScreen = document.getElementById('pause-screen');
 const overScreen = document.getElementById('game-over');
+const gameOverTitle = document.getElementById('game-over-title');
 const finalScore = document.getElementById('final-score');
 const finalLabel = document.getElementById('final-label');
+const finalMatchResult = document.getElementById('final-match-result');
 const finalWaveRow = document.getElementById('final-wave-row');
+const scoreboardEl = document.getElementById('scoreboard');
+const scoreboardButton = document.getElementById('scoreboard-btn');
+const scoreboardCloseButton = document.getElementById('scoreboard-close');
+const blueRoster = document.getElementById('blue-roster');
+const redRoster = document.getElementById('red-roster');
+const blueBoardScore = document.getElementById('board-blue-score');
+const redBoardScore = document.getElementById('board-red-score');
+const killFeedEl = document.getElementById('kill-feed');
+const settingsScreen = document.getElementById('settings-screen');
+const settingsCloseButton = document.getElementById('settings-close-btn');
+const settingsResetButton = document.getElementById('settings-reset-btn');
+const sensitivitySlider = document.getElementById('settings-sensitivity');
+const sensitivityValue = document.getElementById('settings-sensitivity-value');
+const fovSlider = document.getElementById('settings-fov');
+const fovValue = document.getElementById('settings-fov-value');
+const volumeSlider = document.getElementById('settings-volume');
+const volumeValue = document.getElementById('settings-volume-value');
+const graphicsQualitySelect = document.getElementById('settings-graphics');
+let settingsReturnScreen = 'start-screen';
 const finalWave = document.getElementById('final-wave');
 const pauseCopy = document.getElementById('pause-copy');
 const movePad = document.getElementById('move-pad');
@@ -169,6 +246,76 @@ const lanAddressValue = document.getElementById('lan-address-value');
 const lanHostInput = document.getElementById('lan-host-input');
 const lanPlayerList = document.getElementById('lan-player-list');
 const lanStartMatchButton = document.getElementById('lan-start-match-btn');
+
+function getActorDisplayName(actor) {
+  if (actor?.isPlayer) return 'شما';
+  return actor?.displayName || (actor?.team === 'blue' ? 'هم‌تیمی' : 'حریف');
+}
+
+function addKillFeedEntry(attacker, victim) {
+  if (activeMode !== 'tdm') return;
+  const entry = document.createElement('div');
+  entry.className = 'kill-feed-entry';
+  const killer = document.createElement('strong');
+  killer.className = 'feed-killer';
+  killer.textContent = getActorDisplayName(attacker);
+  const mark = document.createElement('span');
+  mark.className = 'feed-mark';
+  mark.textContent = '▸';
+  const eliminated = document.createElement('strong');
+  eliminated.className = 'feed-victim';
+  eliminated.textContent = getActorDisplayName(victim);
+  entry.append(killer, mark, eliminated);
+  killFeedEl.prepend(entry);
+  while (killFeedEl.children.length > 4) killFeedEl.lastElementChild.remove();
+  window.setTimeout(() => entry.remove(), 4800);
+}
+
+function renderRoster(target, actors) {
+  const rows = document.createDocumentFragment();
+  for (const actor of actors) {
+    const row = document.createElement('div');
+    row.className = `scoreboard-row${actor.isPlayer ? ' is-local' : ''}${actor.alive ? '' : ' is-dead'}`;
+    const name = document.createElement('strong');
+    name.textContent = getActorDisplayName(actor);
+    const kills = document.createElement('span');
+    kills.textContent = numberFa.format(Math.max(0, Number(actor.kills) || 0));
+    const deaths = document.createElement('span');
+    deaths.textContent = numberFa.format(
+      Math.max(0, Number(actor.deaths) || 0)
+    );
+    const status = document.createElement('span');
+    status.className = 'scoreboard-status';
+    status.textContent = actor.alive ? 'زنده' : 'حذف';
+    row.append(name, kills, deaths, status);
+    rows.append(row);
+  }
+  target.replaceChildren(rows);
+}
+
+function renderScoreboard() {
+  if (activeMode !== 'tdm') return;
+  const match = matchSession.snapshot();
+  blueBoardScore.textContent = numberFa.format(match.scores.blue);
+  redBoardScore.textContent = numberFa.format(match.scores.red);
+  const byId = (a, b) => a.netId - b.netId;
+  renderRoster(blueRoster, [
+    player,
+    ...enemyMgr.enemies.filter((enemy) => enemy.team === 'blue').sort(byId),
+  ]);
+  renderRoster(
+    redRoster,
+    enemyMgr.enemies.filter((enemy) => enemy.team === 'red').sort(byId)
+  );
+}
+
+function setScoreboardOpen(open) {
+  const shouldOpen =
+    Boolean(open) && activeMode === 'tdm' && running && !gameOver;
+  scoreboardEl.hidden = !shouldOpen;
+  scoreboardButton.setAttribute('aria-expanded', String(shouldOpen));
+  if (shouldOpen) renderScoreboard();
+}
 
 function clearInput() {
   input.forward = false;
@@ -367,12 +514,13 @@ async function leaveLanLobby() {
 function startLanMatch(mode) {
   const role = lanRole;
   if (!role) return;
+  if (role === 'host') void ensureNavigation();
   activeMode = mode === 'zombie' ? 'zombie' : 'training';
   lanMatchStarted = true;
   resetGame(activeMode);
   enemyMgr.networkClient = role === 'client';
   if (role === 'client') {
-    const angle = localSpawnSlot * (Math.PI * 2 / 5);
+    const angle = localSpawnSlot * ((Math.PI * 2) / 5);
     const spawn = world.playerSpawn.clone();
     spawn.x += Math.sin(angle) * 3;
     spawn.z -= Math.cos(angle) * 3;
@@ -491,7 +639,7 @@ function handleClientMessage(message) {
     }
     updateHud();
   } else if (message.type === 'end') {
-    if (running && !gameOver) endGame();
+    if (running && !gameOver) endGame({ playDeathSound: false });
   } else if (message.type === 'roomClosed') {
     void handleLanDisconnected('میزبان بازی را بست.');
   }
@@ -569,6 +717,23 @@ for (const button of document.querySelectorAll('[data-lan-mode]')) {
 }
 
 document.addEventListener('keydown', (event) => {
+  if (event.code === 'Escape' && !settingsScreen.hidden) {
+    event.preventDefault();
+    closeSettings();
+    return;
+  }
+  if (event.code === 'Tab' && running && activeMode === 'tdm') {
+    event.preventDefault();
+    if (!event.repeat) setScoreboardOpen(scoreboardEl.hidden);
+    return;
+  }
+  if (event.code === 'Escape' && running && !scoreboardEl.hidden) {
+    setScoreboardOpen(false);
+    if (isTouchDevice) {
+      pauseGame();
+      return;
+    }
+  }
   if (event.code === 'Escape' && isTouchDevice && running) {
     pauseGame();
     return;
@@ -667,9 +832,10 @@ canvas.addEventListener('pointermove', (event) => {
   const dy = event.clientY - previousLookPoint.y;
   previousLookPoint = { x: event.clientX, y: event.clientY };
   const sensitivity = window.innerWidth < 600 ? 0.0042 : 0.0036;
-  camera.rotation.y -= dx * sensitivity;
+  const adjustedSensitivity = sensitivity * gameSettings.lookSensitivity;
+  camera.rotation.y -= dx * adjustedSensitivity;
   camera.rotation.x = THREE.MathUtils.clamp(
-    camera.rotation.x - dy * sensitivity,
+    camera.rotation.x - dy * adjustedSensitivity,
     -Math.PI / 2 + 0.035,
     Math.PI / 2 - 0.035
   );
@@ -721,6 +887,7 @@ document.getElementById('touch-switch').addEventListener('click', () => {
 
 // ---------- Pickups ----------
 function updatePickups(dt) {
+  if (!player.alive) return;
   const now = performance.now();
   for (const pickup of world.pickups) {
     if (!pickup.active) {
@@ -752,8 +919,78 @@ function updatePickups(dt) {
   }
 }
 
+// ---------- Local gameplay settings ----------
+function syncSettingsControls() {
+  sensitivitySlider.value = String(Math.round(gameSettings.lookSensitivity * 100));
+  sensitivityValue.textContent = `${numberFa.format(Math.round(gameSettings.lookSensitivity * 100))}٪`;
+  fovSlider.value = String(gameSettings.fieldOfView);
+  fovValue.textContent = `${numberFa.format(gameSettings.fieldOfView)}°`;
+  volumeSlider.value = String(Math.round(gameSettings.masterVolume * 100));
+  volumeValue.textContent = `${numberFa.format(Math.round(gameSettings.masterVolume * 100))}٪`;
+  graphicsQualitySelect.value = gameSettings.graphicsQuality;
+}
+
+function applyGameSettings(settings) {
+  gameSettings = saveGameSettings(settings);
+  controls.pointerSpeed = gameSettings.lookSensitivity;
+  camera.fov = gameSettings.fieldOfView;
+  camera.updateProjectionMatrix();
+  soundEffects.setMasterVolume(gameSettings.masterVolume);
+  applyGraphicsQuality(gameSettings.graphicsQuality);
+  syncSettingsControls();
+}
+
+function openSettings(returnScreen = 'start-screen') {
+  settingsReturnScreen = returnScreen === 'pause-screen' ? 'pause-screen' : 'start-screen';
+  startScreen.style.display = 'none';
+  pauseScreen.style.display = 'none';
+  settingsScreen.hidden = false;
+  syncSettingsControls();
+  settingsCloseButton.focus({ preventScroll: true });
+}
+
+function closeSettings() {
+  settingsScreen.hidden = true;
+  document.getElementById(settingsReturnScreen).style.display = 'flex';
+}
+
+syncSettingsControls();
+for (const button of document.querySelectorAll('.settings-open-btn')) {
+  button.addEventListener('click', () => openSettings(button.dataset.settingsReturn));
+}
+settingsCloseButton.addEventListener('click', closeSettings);
+settingsResetButton.addEventListener('click', () => applyGameSettings(DEFAULT_GAME_SETTINGS));
+sensitivitySlider.addEventListener('input', () =>
+  applyGameSettings({
+    ...gameSettings,
+    lookSensitivity: Number(sensitivitySlider.value) / 100,
+  })
+);
+fovSlider.addEventListener('input', () =>
+  applyGameSettings({
+    ...gameSettings,
+    fieldOfView: Number(fovSlider.value),
+  })
+);
+volumeSlider.addEventListener('input', () =>
+  applyGameSettings({
+    ...gameSettings,
+    masterVolume: Number(volumeSlider.value) / 100,
+  })
+);
+graphicsQualitySelect.addEventListener('change', () =>
+  applyGameSettings({
+    ...gameSettings,
+    graphicsQuality: graphicsQualitySelect.value,
+  })
+);
+settingsScreen.addEventListener('click', (event) => {
+  if (event.target === settingsScreen) closeSettings();
+});
+
 // ---------- Start / pause / restart flow ----------
 function enterGame() {
+  setScoreboardOpen(false);
   startScreen.style.display = 'none';
   pauseScreen.style.display = 'none';
   overScreen.style.display = 'none';
@@ -767,8 +1004,8 @@ function enterGame() {
 
 function startGame(mode = 'training') {
   void soundEffects.unlock().catch(() => {});
-  activeMode = mode === 'zombie' ? 'zombie' : 'training';
-  resetGame(activeMode);
+  void ensureNavigation();
+  resetGame(mode);
   if (isTouchDevice) {
     enterGame();
     return;
@@ -779,7 +1016,7 @@ function startGame(mode = 'training') {
 controls.addEventListener('lock', enterGame);
 controls.addEventListener('unlock', () => {
   clearInput();
-  if (!gameOver) {
+  if (!gameOver && scoreboardEl.hidden) {
     running = false;
     document.body.classList.remove('playing');
     pauseScreen.style.display = 'flex';
@@ -788,6 +1025,13 @@ controls.addEventListener('unlock', () => {
 
 document.getElementById('start-training-btn').addEventListener('click', () => startGame('training'));
 document.getElementById('start-zombie-btn').addEventListener('click', () => startGame('zombie'));
+document
+  .getElementById('start-tdm-btn')
+  .addEventListener('click', () => startGame('tdm'));
+scoreboardButton.addEventListener('click', () =>
+  setScoreboardOpen(scoreboardEl.hidden)
+);
+scoreboardCloseButton.addEventListener('click', () => setScoreboardOpen(false));
 document.getElementById('resume-btn').addEventListener('click', () => {
   void soundEffects.unlock().catch(() => {});
   if (isTouchDevice) enterGame();
@@ -822,6 +1066,7 @@ document.getElementById('restart-btn').addEventListener('click', () => {
 
 function pauseGame() {
   if (!running || gameOver) return;
+  setScoreboardOpen(false);
   if (isTouchDevice) {
     clearInput();
     running = false;
@@ -834,11 +1079,22 @@ function pauseGame() {
 
 function resetGame(mode = activeMode) {
   clearInput();
-  activeMode = mode === 'zombie' ? 'zombie' : 'training';
+  setScoreboardOpen(false);
+  killFeedEl.replaceChildren();
+  activeMode = ['zombie', 'tdm'].includes(mode) ? mode : 'training';
+  if (activeMode === 'tdm') {
+    player.kills = 0;
+    player.deaths = 0;
+  }
   document.body.classList.toggle('zombie-mode', activeMode === 'zombie');
+  document.body.classList.toggle('match-mode', activeMode === 'tdm');
   player.reset(world.playerSpawn);
   weapon.reset();
   enemyMgr.start(activeMode);
+  if (activeMode === 'tdm') matchSession.start();
+  else matchSession.reset();
+  playerRespawnTimer = 0;
+  hud.showRespawn(0);
   for (const pickup of world.pickups) {
     pickup.active = true;
     pickup.mesh.visible = true;
@@ -850,12 +1106,54 @@ function resetGame(mode = activeMode) {
   overScreen.style.display = 'none';
 }
 
+function handlePlayerDeath(attacker = null) {
+  if (activeMode !== 'tdm' || matchSession.phase !== 'active') {
+    endGame();
+    return;
+  }
+
+  soundEffects.death();
+  clearInput();
+  playerRespawnTimer = 3;
+  hud.showRespawn(playerRespawnTimer);
+  if (attacker?.team) {
+    attacker.kills = (attacker.kills || 0) + 1;
+    matchSession.recordKill(attacker.team);
+    addKillFeedEntry(attacker, player);
+  }
+  if (!scoreboardEl.hidden) renderScoreboard();
+  updateHud();
+  if (matchSession.phase === 'finished') endGame({ playDeathSound: false });
+}
+
+function updatePlayerRespawn(dt) {
+  if (activeMode !== 'tdm' || player.alive || playerRespawnTimer <= 0) return;
+  playerRespawnTimer = Math.max(0, playerRespawnTimer - dt);
+  hud.showRespawn(playerRespawnTimer);
+  if (playerRespawnTimer === 0 && matchSession.phase === 'active') {
+    const spawn = enemyMgr.chooseTeamSpawn(player.team, [
+      player,
+      ...enemyMgr.enemies,
+    ]);
+    player.reset(spawn);
+    hud.showRespawn(0);
+    if (!scoreboardEl.hidden) renderScoreboard();
+  }
+}
+
 function returnToMenu() {
   gameOver = true;
   running = false;
+  setScoreboardOpen(false);
+  killFeedEl.replaceChildren();
+  playerRespawnTimer = 0;
+  matchSession.reset();
+  activeMode = 'training';
+  hud.showRespawn(0);
   if (lanRole) void closeLanSession();
   clearInput();
-  document.body.classList.remove('playing');
+  document.body.classList.remove('playing', 'zombie-mode', 'match-mode');
+  updateHud();
   if (controls.isLocked) controls.unlock();
   lanScreen.style.display = 'none';
   pauseScreen.style.display = 'none';
@@ -863,17 +1161,42 @@ function returnToMenu() {
   startScreen.style.display = 'flex';
 }
 
-function endGame() {
-  soundEffects.death();
+function endGame({ playDeathSound = true } = {}) {
+  if (gameOver) return;
+  if (playDeathSound) soundEffects.death();
   if (lanRole === 'host' && lanMatchStarted) {
     void lanTransport.send({ type: 'end' }).catch(() => {});
   }
   gameOver = true;
   running = false;
+  setScoreboardOpen(false);
+  playerRespawnTimer = 0;
+  hud.showRespawn(0);
   clearInput();
   document.body.classList.remove('playing');
+
+  if (activeMode === 'tdm') {
+    const result = matchSession.snapshot();
+    finalScore.textContent = `${numberFa.format(result.scores.blue)} — ${numberFa.format(result.scores.red)}`;
+    finalLabel.textContent = 'تیم آبی — تیم قرمز';
+    finalMatchResult.style.display = 'block';
+    if (result.winner === 'blue') {
+      gameOverTitle.textContent = 'پیروزی تیم شما';
+      finalMatchResult.textContent = 'تیم آبی مسابقه را برد.';
+    } else if (result.winner === 'red') {
+      gameOverTitle.textContent = 'شکست';
+      finalMatchResult.textContent = 'تیم قرمز مسابقه را برد.';
+    } else {
+      gameOverTitle.textContent = 'مساوی';
+      finalMatchResult.textContent =
+        'زمان تمام شد و دو تیم امتیاز برابر دارند.';
+    }
+  } else {
+    gameOverTitle.textContent = 'پایان بازی';
   finalScore.textContent = numberFa.format(enemyMgr.kills);
   finalLabel.textContent = activeMode === 'zombie' ? 'زامبی ازبین‌رفته' : 'حذف';
+    finalMatchResult.style.display = 'none';
+  }
   finalWaveRow.style.display = activeMode === 'zombie' ? 'block' : 'none';
   finalWave.textContent = numberFa.format(enemyMgr.wave);
   overScreen.style.display = 'flex';
@@ -900,6 +1223,11 @@ function animate() {
     player.update(dt, input, world.bounds);
     weapon.update(dt);
     enemyMgr.update(dt, getEnemyTargets());
+    if (activeMode === 'tdm' && !gameOver) {
+      matchSession.update(dt);
+      if (matchSession.phase === 'finished') endGame({ playDeathSound: false });
+      else updatePlayerRespawn(dt);
+    }
     updatePickups(dt);
     updateHud();
 

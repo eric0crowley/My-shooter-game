@@ -31,11 +31,77 @@ function disposeMaterial(material) {
   else material?.dispose();
 }
 
+function distanceXZ(a, b) {
+  return Math.hypot(a.x - b.x, a.z - b.z);
+}
+
+function actorPosition(actor) {
+  return (
+    actor?.camera?.position || actor?.group?.position || actor?.position || null
+  );
+}
+
+function pointOverlapsBox(point, box, padding = 0) {
+  return (
+    point.x > box.minX - padding &&
+    point.x < box.maxX + padding &&
+    point.z > box.minZ - padding &&
+    point.z < box.maxZ + padding
+  );
+}
+
+function buildCoverPoints(colliders, bounds) {
+  const points = [];
+  const seen = new Set();
+  const offset = 1.15;
+  const spawnBounds = Math.max(0, bounds - 1.25);
+
+  for (const box of colliders) {
+    const centerX = (box.minX + box.maxX) / 2;
+    const centerZ = (box.minZ + box.maxZ) / 2;
+    const candidates = [
+      { x: box.minX - offset, z: centerZ },
+      { x: box.maxX + offset, z: centerZ },
+      { x: centerX, z: box.minZ - offset },
+      { x: centerX, z: box.maxZ + offset },
+    ];
+
+    for (const point of candidates) {
+      if (Math.abs(point.x) > spawnBounds || Math.abs(point.z) > spawnBounds) continue;
+      if (colliders.some((other) => pointOverlapsBox(point, other, 0.58))) continue;
+      const key = `${point.x.toFixed(2)}:${point.z.toFixed(2)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      points.push(new THREE.Vector3(point.x, 0, point.z));
+    }
+  }
+  return points;
+}
+
+function routeDistance(path, fallback) {
+  if (!Array.isArray(path) || path.length < 2) return fallback;
+  let distance = 0;
+  for (let index = 1; index < path.length; index++) {
+    distance += distanceXZ(path[index - 1], path[index]);
+  }
+  return distance;
+}
+
+function damageActor(actor, amount, attacker) {
+  if (typeof actor?.damage === 'function') actor.damage(amount, attacker);
+  else actor?.takeDamage?.(amount, attacker);
+}
+
 export class Enemy {
   constructor(scene, spawn, manager, kind = 'bot', stats = {}) {
     this.scene = scene;
     this.manager = manager;
     this.kind = kind;
+    this.team = stats.team === 'blue' ? 'blue' : 'red';
+    this.displayName =
+      typeof stats.displayName === 'string' ? stats.displayName : '';
+    this.kills = 0;
+    this.deaths = 0;
     this.netId = null;
     this.radius = kind === 'zombie' ? 0.48 : 0.5;
     this.alive = true;
@@ -52,6 +118,14 @@ export class Enemy {
     this.respawnAt = null;
     this.animationTime = Math.random() * Math.PI * 2;
 
+    this.navigationPath = [];
+    this.navigationTarget = new THREE.Vector3();
+    this.navigationTargetValid = false;
+    this.navigationWaypointIndex = 0;
+    this.navigationRefreshTimer = 0;
+    this.coverTarget = null;
+    this.coverUntil = 0;
+
     this.group = new THREE.Group();
     this.group.userData.enemy = this;
     this.makeModel();
@@ -64,7 +138,7 @@ export class Enemy {
     const isZombie = this.kind === 'zombie';
     this.fallbackVisual = new THREE.Group();
     const bodyMaterial = new THREE.MeshStandardMaterial({
-      color: isZombie ? 0x62734b : 0xcc4433,
+      color: isZombie ? 0x62734b : this.team === 'blue' ? 0x347fca : 0xcc4433,
       roughness: 0.78,
       metalness: 0.02,
     });
@@ -141,23 +215,38 @@ export class Enemy {
     this.attackCooldown = 0.35 + Math.random() * 0.55;
     this.respawnAt = null;
     this.animationTime = Math.random() * Math.PI * 2;
+    this.navigationPath = [];
+    this.navigationTargetValid = false;
+    this.navigationWaypointIndex = 0;
+    this.navigationRefreshTimer = 0;
+    this.coverTarget = null;
+    this.coverUntil = 0;
     this.group.position.set(pos.x, 0, pos.z);
     this.group.rotation.set(0, 0, 0);
     this.group.visible = true;
     this.alive = true;
   }
 
-  takeDamage(amount) {
+  takeDamage(amount, attacker = null) {
     if (!this.alive || amount <= 0) return;
+    if (
+      this.manager.mode === 'tdm' &&
+      attacker?.team &&
+      attacker.team !== this.team &&
+      (!this.coverTarget || this.manager.elapsed >= this.coverUntil)
+    ) {
+      this.coverTarget = this.manager.findCoverPosition(this, attacker);
+      if (this.coverTarget) this.coverUntil = this.manager.elapsed + 1.35;
+    }
     this.health -= amount;
-    if (this.health <= 0) this.die();
+    if (this.health <= 0) this.die(attacker);
   }
 
-  die() {
+  die(attacker = null) {
     if (!this.alive) return;
     this.alive = false;
     this.group.visible = false;
-    this.manager.onKill(this);
+    this.manager.onKill(this, attacker);
   }
 
   hasLineOfSight(target, colliders) {
@@ -171,9 +260,55 @@ export class Enemy {
   moveToward(target, dt, colliders, bounds, distance) {
     const from = this.group.position;
     if (distance <= this.attackRange * 0.8) return;
-    const baseAngle = Math.atan2(target.x - from.x, target.z - from.z);
+
+    let movementTarget = target;
+    const navigation = this.manager.navigation;
+    if (navigation) {
+      this.navigationRefreshTimer -= dt;
+      const targetMoved =
+        !this.navigationTargetValid ||
+        distanceXZ(this.navigationTarget, target) > 2.5;
+      if (
+        !this.navigationTargetValid ||
+        this.navigationRefreshTimer <= 0 ||
+        targetMoved
+      ) {
+        this.navigationTarget.set(target.x, target.y || 0, target.z);
+        this.navigationTargetValid = true;
+        try {
+          this.navigationPath = navigation.findPath(from, target);
+        } catch {
+          this.navigationPath = [];
+        }
+        this.navigationWaypointIndex = this.navigationPath.length > 1 ? 1 : 0;
+        this.navigationRefreshTimer = 0.45;
+      }
+
+      while (
+        this.navigationWaypointIndex < this.navigationPath.length - 1 &&
+        distanceXZ(from, this.navigationPath[this.navigationWaypointIndex]) <
+          0.55
+      ) {
+        this.navigationWaypointIndex++;
+      }
+      if (this.navigationPath.length > 1) {
+        movementTarget =
+          this.navigationPath[
+            Math.min(
+              this.navigationWaypointIndex,
+              this.navigationPath.length - 1
+            )
+          ];
+      }
+    }
+
+    const targetDistance = distanceXZ(from, movementTarget);
+    if (targetDistance < 0.01) return;
+    const baseAngle = Math.atan2(
+      movementTarget.x - from.x,
+      movementTarget.z - from.z);
     const offsets = [0, 0.55, -0.55, 1.05, -1.05, 1.6, -1.6];
-    let best = { x: from.x, z: from.z, distance };
+    let best = { x: from.x, z: from.z, distance: targetDistance };
 
     for (const offset of offsets) {
       const angle = baseAngle + offset;
@@ -182,7 +317,7 @@ export class Enemy {
       [x, z] = resolveCircleBoxes(x, z, this.radius, colliders);
       x = clamp(x, -bounds + this.radius, bounds - this.radius);
       z = clamp(z, -bounds + this.radius, bounds - this.radius);
-      const nextDistance = Math.hypot(target.x - x, target.z - z);
+      const nextDistance = distanceXZ(movementTarget, { x, z });
       if (nextDistance < best.distance - 0.0001) best = { x, z, distance: nextDistance };
     }
 
@@ -205,27 +340,54 @@ export class Enemy {
     this.animate(dt);
 
     const candidates = Array.isArray(player) ? player : [player];
-    let targetPlayer = null;
+    let targetActor = null;
     let target = null;
     let distance = Infinity;
     const from = this.group.position;
     for (const candidate of candidates) {
-      if (!candidate?.camera?.position || candidate.alive === false) continue;
-      const candidateDistance = Math.hypot(
-        candidate.camera.position.x - from.x,
-        candidate.camera.position.z - from.z
-      );
+      if (!candidate || candidate === this || candidate.alive === false) continue;
+      const candidateTeam = candidate.team === 'red' ? 'red' : 'blue';
+      if (candidateTeam === this.team) continue;
+      const position = actorPosition(
+        candidate);
+      if (
+        !position ||
+        !Number.isFinite(position.x) ||
+        !Number.isFinite(position.z)
+      )
+        continue;
+      const candidateDistance = distanceXZ(position, from);
       if (candidateDistance < distance) {
-        targetPlayer = candidate;
-        target = candidate.camera.position;
+        targetActor = candidate;
+        target = candidate.group
+          ? { x: position.x, y: position.y + 1.05, z: position.z }
+          : position;
         distance = candidateDistance;
       }
     }
-    if (!targetPlayer) return;
+    if (!targetActor) return;
 
     const dx = target.x - from.x;
     const dz = target.z - from.z;
     this.group.rotation.y = Math.atan2(dx, dz);
+    if (
+      this.manager.mode === 'tdm' &&
+      this.coverTarget &&
+      this.manager.elapsed < this.coverUntil
+    ) {
+      this.moveToward(
+        this.coverTarget,
+        dt,
+        colliders,
+        bounds,
+        distanceXZ(from, this.coverTarget)
+      );
+      return;
+    }
+    if (this.coverTarget) {
+      this.coverTarget = null;
+      this.navigationTargetValid = false;
+    }
     this.attackCooldown -= dt;
     if (distance > this.detectRange) return;
 
@@ -240,7 +402,7 @@ export class Enemy {
       this.attackCooldown = this.attackRate;
       const hit = Math.random() < this.hitChance;
       this.manager.spawnTracer(from, target, hit);
-      if (hit) targetPlayer.damage(this.damage);
+      if (hit) damageActor(targetActor, this.damage, this);
       return;
     }
 
@@ -249,16 +411,21 @@ export class Enemy {
     if (updatedDistance > this.attackRange || this.attackCooldown > 0 || !canSeeTarget) return;
 
     this.attackCooldown = this.attackRate;
-    targetPlayer.damage(this.damage);
+    damageActor(targetActor, this.damage, this);
   }
 }
 
 export class EnemyManager {
-  constructor(scene, spawns, colliders, bounds) {
+  constructor(scene, spawns, colliders, bounds, teamSpawns = {}) {
     this.scene = scene;
-    this.spawns = spawns;
-    this.colliders = colliders;
+    this.spawns = Array.isArray(spawns) ? spawns : [];
+    this.colliders = Array.isArray(colliders) ? colliders : [];
     this.bounds = bounds;
+    this.teamSpawns = {
+      blue: Array.isArray(teamSpawns.blue) ? teamSpawns.blue : [],
+      red: Array.isArray(teamSpawns.red) ? teamSpawns.red : [],
+    };
+    this.coverPoints = buildCoverPoints(this.colliders, bounds);
     this.enemies = [];
     this.score = 0;
     this.kills = 0;
@@ -272,7 +439,9 @@ export class EnemyManager {
     this.tracers = [];
     this.nextNetId = 1;
     this.networkClient = false;
+    this.navigation = null;
     this.onKillEvent = null;
+    this.onRespawnEvent = null;
     this.onWaveStart = null;
     this.recoveredZombieTemplate = null;
     if (typeof document !== 'undefined') void this.loadRecoveredZombieModel();
@@ -348,8 +517,29 @@ export class EnemyManager {
 
   registerEnemy(enemy) {
     enemy.netId = this.nextNetId++;
+    if (!enemy.displayName) {
+      const teamIndex =
+        this.enemies.filter((candidate) => candidate.team === enemy.team)
+          .length + 1;
+      enemy.displayName =
+        this.mode === 'tdm'
+          ? `${enemy.team === 'blue' ? 'هم‌تیمی' : 'حریف'} ${teamIndex}`
+          : enemy.kind === 'zombie'
+            ? `زامبی ${teamIndex}`
+            : `ربات ${teamIndex}`;
+    }
     this.enemies.push(enemy);
     return enemy;
+  }
+
+  setNavigation(navigation) {
+    this.navigation = navigation || null;
+    for (const enemy of this.enemies) {
+      enemy.navigationPath = [];
+      enemy.navigationTargetValid = false;
+      enemy.navigationWaypointIndex = 0;
+      enemy.navigationRefreshTimer = 0;
+    }
   }
 
   get aliveCount() {
@@ -360,8 +550,85 @@ export class EnemyManager {
     return this.mode === 'zombie' ? this.aliveCount + this.waveQueue : this.aliveCount;
   }
 
-  getMeshes() {
-    return this.enemies.map((enemy) => enemy.group);
+  getMeshes(targetTeam = null) {
+    return this.enemies
+      .filter(
+        (enemy) => enemy.alive && (!targetTeam || enemy.team !== targetTeam)
+      )
+      .map((enemy) => enemy.group);
+  }
+
+  chooseTeamSpawn(team, candidates = []) {
+    const spawnPoints = this.teamSpawns[team]?.length
+      ? this.teamSpawns[team]
+      : this.spawns;
+    if (!spawnPoints.length) return new THREE.Vector3();
+
+    const actors = [
+      ...new Set([
+        ...this.enemies,
+        ...(Array.isArray(candidates) ? candidates : [candidates]),
+      ]),
+    ].filter(
+      (actor) => actor?.alive !== false && actor?.team && actor.team !== team
+    );
+    if (!actors.length)
+      return spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
+
+    let safestDistance = -Infinity;
+    let safestSpawns = [];
+    for (const spawn of spawnPoints) {
+      const nearestOpponent = Math.min(
+        ...actors.map((actor) => {
+          const position = actorPosition(actor);
+          return position ? distanceXZ(spawn, position) : Infinity;
+        })
+      );
+      if (nearestOpponent > safestDistance + 0.001) {
+        safestDistance = nearestOpponent;
+        safestSpawns = [spawn];
+      } else if (Math.abs(nearestOpponent - safestDistance) <= 0.001) {
+        safestSpawns.push(spawn);
+      }
+    }
+    return (
+      safestSpawns[Math.floor(Math.random() * safestSpawns.length)] ||
+      spawnPoints[0]
+    );
+  }
+
+  findCoverPosition(enemy, threat) {
+    const from = enemy?.group?.position;
+    const target = actorPosition(threat);
+    if (!from || !target || this.coverPoints.length === 0) return null;
+
+    let bestPoint = null;
+    let bestRouteDistance = Infinity;
+    for (const point of this.coverPoints) {
+      const directDistance = distanceXZ(from, point);
+      if (directDistance < 1.2 || directDistance > 14) continue;
+      const blocksThreat = this.colliders.some((box) =>
+        segmentIntersectsBox(point.x, point.z, target.x, target.z, box)
+      );
+      if (!blocksThreat) continue;
+
+      let path = [];
+      if (this.navigation) {
+        try {
+          path = this.navigation.findPath(from, point);
+        } catch {
+          path = [];
+        }
+        if (path.length < 2) continue;
+      }
+
+      const distance = routeDistance(path, directDistance);
+      if (distance < bestRouteDistance) {
+        bestPoint = point;
+        bestRouteDistance = distance;
+      }
+    }
+    return bestPoint ? bestPoint.clone() : null;
   }
 
   clearActors() {
@@ -383,7 +650,7 @@ export class EnemyManager {
 
   start(mode = 'training') {
     this.clearActors();
-    this.mode = mode === 'zombie' ? 'zombie' : 'training';
+    this.mode = ['zombie', 'tdm'].includes(mode) ? mode : 'training';
     this.score = 0;
     this.kills = 0;
     this.elapsed = 0;
@@ -398,6 +665,26 @@ export class EnemyManager {
       for (let i = 0; i < 6; i++) {
         const spawn = this.spawns[i % this.spawns.length];
         this.registerEnemy(new Enemy(this.scene, spawn, this, 'bot'));
+      }
+      return;
+    }
+
+    if (this.mode === 'tdm') {
+      const blueSpawns =
+        this.teamSpawns.blue.length > 1
+          ? this.teamSpawns.blue.slice(1)
+          : this.spawns.filter((_, index) => index % 2 === 0);
+      const redSpawns = this.teamSpawns.red.length
+        ? this.teamSpawns.red
+        : this.spawns.filter((_, index) => index % 2 === 1);
+      for (const spawn of blueSpawns) {
+        this.registerEnemy(
+          new Enemy(this.scene, spawn, this, 'bot', { team: 'blue' })
+        );
+      }
+      for (const spawn of redSpawns) {
+        this.registerEnemy(
+          new Enemy(this.scene, spawn, this, 'bot', { team: 'red' }));
       }
       return;
     }
@@ -433,11 +720,23 @@ export class EnemyManager {
     this.waveQueue--;
   }
 
-  onKill(enemy) {
+  onKill(enemy, attacker = null) {
     if (this.networkClient) return;
+    enemy.deaths = (enemy.deaths || 0) + 1;
+    if (attacker?.team) attacker.kills = (attacker.kills || 0) + 1;
+    if (this.mode === 'tdm') {
+      if (attacker?.isPlayer) {
+        this.score++;
+        this.kills++;
+      }
+      if (attacker?.team && this.onKillEvent) this.onKillEvent(enemy, attacker);
+      enemy.respawnAt = this.elapsed + 2 + Math.random() * 1.25;
+      return;
+    }
+
     this.score++;
     this.kills++;
-    if (this.onKillEvent) this.onKillEvent(enemy);
+    if (this.onKillEvent) this.onKillEvent(enemy, attacker);
     if (this.mode === 'training') {
       enemy.respawnAt = this.elapsed + 1.5 + Math.random() * 1.5;
     } else {
@@ -455,6 +754,10 @@ export class EnemyManager {
       enemies: this.enemies.map((enemy) => ({
         id: enemy.netId,
         kind: enemy.kind,
+        team: enemy.team,
+        displayName: enemy.displayName,
+        kills: enemy.kills,
+        deaths: enemy.deaths,
         x: enemy.group.position.x,
         y: enemy.group.position.y,
         z: enemy.group.position.z,
@@ -486,12 +789,18 @@ export class EnemyManager {
       const z = Number(remote?.z);
       if (!Number.isInteger(id) || id < 1 || ![x, y, z].every(Number.isFinite)) continue;
       const kind = remote.kind === 'zombie' ? 'zombie' : 'bot';
+      const team = remote.team === 'blue' ? 'blue' : 'red';
       const maxHealth = Math.max(1, Number(remote.maxHealth) || 100);
       let enemy = this.enemies.find((candidate) => candidate.netId === id);
       if (!enemy) {
         enemy = new Enemy(this.scene, new THREE.Vector3(x, y, z), this, kind, {
           health: maxHealth,
           speed: Math.max(0, Number(remote.speed) || 0),
+          team,
+          displayName:
+            typeof remote.displayName === 'string'
+              ? remote.displayName.slice(0, 24)
+              : '',
         });
         enemy.netId = id;
         this.enemies.push(enemy);
@@ -509,7 +818,12 @@ export class EnemyManager {
       enemy.group.position.set(x, y, z);
       enemy.group.rotation.y = Number.isFinite(Number(remote.yaw)) ? Number(remote.yaw) : 0;
       enemy.maxHealth = maxHealth;
-      enemy.health = Math.max(0, Math.min(maxHealth, Number(remote.health) || 0));
+      enemy.health = Math.max(0, Math.min(maxHealth, Number(remote.health) || 0)
+      );
+      enemy.kills = Math.max(0, Math.floor(Number(remote.kills) || 0));
+      enemy.deaths = Math.max(0, Math.floor(Number(remote.deaths) || 0));
+      if (typeof remote.displayName === 'string')
+        enemy.displayName = remote.displayName.slice(0, 24);
       if (Number.isFinite(Number(remote.animationTime))) enemy.animationTime = Number(remote.animationTime);
       enemy.respawnAt = null;
       receivedIds.add(id);
@@ -547,13 +861,19 @@ export class EnemyManager {
     if (this.networkClient) {
       for (const enemy of this.enemies) enemy.animate(dt);
     } else {
-      for (const enemy of this.enemies) enemy.update(dt, player, this.colliders, this.bounds);
+      const playerActors = Array.isArray(player) ? player : [player];
+      const targets =
+        this.mode === 'tdm' ? [...playerActors, ...this.enemies] : player;
+      for (const enemy of this.enemies) enemy.update(dt, targets, this.colliders, this.bounds);
 
-      if (this.mode === 'training') {
+      if (this.mode === 'training' || this.mode === 'tdm') {
         for (const enemy of this.enemies) {
           if (!enemy.alive && enemy.respawnAt !== null && this.elapsed >= enemy.respawnAt) {
-            const spawn = this.spawns[Math.floor(Math.random() * this.spawns.length)];
-            enemy.spawnAt(spawn);
+            const spawn = this.mode === 'tdm'
+                ? this.chooseTeamSpawn(enemy.team, targets)
+                : this.spawns[Math.floor(Math.random() * this.spawns.length)];
+            enemy.spawnAt(spawn, { team: enemy.team });
+            if (this.onRespawnEvent) this.onRespawnEvent(enemy);
           }
         }
       } else if (this.mode === 'zombie') {

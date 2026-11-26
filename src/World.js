@@ -4,6 +4,7 @@ import * as THREE from 'three';
 // the browser build and be bundled directly into a Capacitor APK.
 export function buildWorld(scene) {
   const colliders = [];
+  const navigationMeshes = [];
   const size = 60;
   const half = size / 2;
   const wallH = 6;
@@ -19,6 +20,7 @@ export function buildWorld(scene) {
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   scene.add(floor);
+  navigationMeshes.push(floor);
 
   const grid = new THREE.GridHelper(size, 30, 0x426369, 0x30434a);
   grid.position.y = 0.025;
@@ -46,6 +48,7 @@ export function buildWorld(scene) {
     wall.castShadow = true;
     wall.receiveShadow = true;
     scene.add(wall);
+    navigationMeshes.push(wall);
     colliders.push({ minX: cx - w / 2, maxX: cx + w / 2, minZ: cz - d / 2, maxZ: cz + d / 2 });
 
     // A narrow emissive stripe sits on the arena-facing wall surface.
@@ -88,6 +91,7 @@ export function buildWorld(scene) {
     cover.castShadow = true;
     cover.receiveShadow = true;
     scene.add(cover);
+    navigationMeshes.push(cover);
 
     const topMark = new THREE.Mesh(
       new THREE.BoxGeometry(Math.max(0.4, w * 0.58), 0.06, Math.max(0.3, d * 0.16)),
@@ -166,11 +170,73 @@ export function buildWorld(scene) {
   sun.shadow.camera.bottom = -40;
   scene.add(sun);
 
+  const playerSpawn = new THREE.Vector3(0, 1.7, 24);
+  const teamSpawns = {
+    blue: [
+      new THREE.Vector3(0, 0, 24),
+      new THREE.Vector3(-20, 0, 24), new THREE.Vector3(-10, 0, 24),
+      new THREE.Vector3(10, 0, 24), new THREE.Vector3(20, 0, 24),
+    ],
+    red: [
+      new THREE.Vector3(-20, 0, -24), new THREE.Vector3(-10, 0, -24),
+      new THREE.Vector3(0, 0, -24), new THREE.Vector3(10, 0, -24),
+      new THREE.Vector3(20, 0, -24),
+    ],
+  };
+
+  // Paint team zones and the central crossfire mark onto the floor. These
+  // elements are decorative only and do not alter collision or navigation.
+  const bluePaint = new THREE.MeshBasicMaterial({
+    color: 0x48baff,
+    transparent: true,
+    opacity: 0.13,
+    depthWrite: false,
+  });
+  const redPaint = new THREE.MeshBasicMaterial({
+    color: 0xff6c58,
+    transparent: true,
+    opacity: 0.13,
+    depthWrite: false,
+  });
+  for (const [spawns, material] of [[teamSpawns.blue, bluePaint], [teamSpawns.red, redPaint]]) {
+    const center = spawns.reduce(
+      (sum, spawn) => sum.add(spawn),
+      new THREE.Vector3()
+    ).multiplyScalar(1 / Math.max(1, spawns.length));
+    const zone = new THREE.Mesh(new THREE.CircleGeometry(5.5, 40), material);
+    zone.rotation.x = -Math.PI / 2;
+    zone.position.set(center.x, 0.035, center.z);
+    scene.add(zone);
+
+    const boundary = new THREE.Mesh(
+      new THREE.TorusGeometry(5.5, 0.045, 6, 64),
+      material.clone()
+    );
+    boundary.rotation.x = Math.PI / 2;
+    boundary.position.set(center.x, 0.06, center.z);
+    scene.add(boundary);
+  }
+
+  const centerMark = new THREE.Mesh(
+    new THREE.TorusGeometry(4.3, 0.055, 6, 72),
+    new THREE.MeshBasicMaterial({
+      color: 0x79e1d9,
+      transparent: true,
+      opacity: 0.56,
+      depthWrite: false,
+    })
+  );
+  centerMark.rotation.x = Math.PI / 2;
+  centerMark.position.y = 0.055;
+  scene.add(centerMark);
+
   return {
     colliders,
+    navigationMeshes,
     bounds: half,
     pickups,
-    playerSpawn: new THREE.Vector3(0, 1.7, 24),
+    playerSpawn,
+    teamSpawns,
     enemySpawns: [
       new THREE.Vector3(-20, 0, -20), new THREE.Vector3(20, 0, -20),
       new THREE.Vector3(-22, 0, 0), new THREE.Vector3(22, 0, 0),

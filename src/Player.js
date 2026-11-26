@@ -23,6 +23,11 @@ export class Player {
     this.health = 100;
     this.maxHealth = 100;
     this.alive = true;
+    this.team = 'blue';
+    this.isPlayer = true;
+    this.displayName = 'شما';
+    this.kills = 0;
+    this.deaths = 0;
     this.onDeath = null;
     this.onDamage = null;
 
@@ -39,14 +44,15 @@ export class Player {
     this.alive = true;
   }
 
-  damage(amount) {
+  damage(amount, attacker = null) {
     if (!this.alive || amount <= 0) return;
     const oldHealth = this.health;
     this.health = Math.max(0, this.health - amount);
     if (this.health < oldHealth && this.onDamage) this.onDamage(amount);
     if (this.health <= 0) {
       this.alive = false;
-      if (this.onDeath) this.onDeath();
+      this.deaths++;
+      if (this.onDeath) this.onDeath(attacker);
     }
   }
 

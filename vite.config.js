@@ -16,11 +16,17 @@ export default defineConfig({
     port: 4173,
     allowedHosts: true,
   },
+  resolve: {
+    // Use the separate WASM asset instead of the base64 compatibility bundle.
+    // This keeps the navigation runtime smaller and lets Vite package the WASM
+    // binary as an ordinary offline asset for Capacitor.
+    alias: [
+      { find: /^@recast-navigation\/wasm$/, replacement: '@recast-navigation/wasm/wasm' },
+    ],
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    // Three.js is intentionally bundled as a single offline-friendly chunk;
-    // the production bundle is about 130 kB when gzip-compressed.
     chunkSizeWarningLimit: 600,
   },
 });
