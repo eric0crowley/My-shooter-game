@@ -3,6 +3,35 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { Enemy, EnemyManager, zombieWavePlan } from '../src/EnemyManager.js';
 
+test('recovered zombie visuals replace the fallback with independently owned meshes', () => {
+  const scene = new THREE.Scene();
+  const manager = { onKill() {}, spawnTracer() {} };
+  const enemy = new Enemy(scene, new THREE.Vector3(2, 0, -3), manager, 'zombie');
+  const template = new THREE.Group();
+  const templateMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshStandardMaterial({ color: 0xffffff })
+  );
+  const headHitbox = new THREE.Mesh(
+    new THREE.SphereGeometry(0.15),
+    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, colorWrite: false })
+  );
+  headHitbox.name = 'ZombieC_HeadHitbox';
+  template.add(templateMesh, headHitbox);
+
+  enemy.setRecoveredVisual(template);
+  assert.equal(enemy.fallbackVisual.visible, false);
+  assert.ok(enemy.recoveredVisual);
+  const recoveredMesh = enemy.recoveredVisual.children[0];
+  assert.notEqual(recoveredMesh.geometry, templateMesh.geometry, 'restart cleanup must not dispose the shared template');
+  assert.notEqual(recoveredMesh.material, templateMesh.material);
+  assert.equal(recoveredMesh.userData.part, 'body');
+  const recoveredHeadHitbox = enemy.recoveredVisual.children[1];
+  assert.equal(recoveredHeadHitbox.userData.part, 'head');
+  const raycaster = new THREE.Raycaster(new THREE.Vector3(0, 0, 3), new THREE.Vector3(0, 0, -1));
+  assert.ok(raycaster.intersectObject(recoveredHeadHitbox).length > 0, 'transparent head collider remains shootable');
+});
+
 test('first zombie wave is small enough for the starter arena', () => {
   assert.deepEqual(zombieWavePlan(1), {
     count: 7,

@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { RECOVERED_WEAPON_ASSETS } from './recoveredAssets.js';
 
 // Multi-weapon hitscan system (rifle / pistol / shotgun).
 // Patterns inspired by open-source Three.js FPS projects (mr-vance/ShooterGame,
@@ -10,6 +12,15 @@ const WEAPONS = [
   { id: 'pistol',  name: 'تپانچه',       auto: false, damage: 34, fireRate: 0.22, mag: 12, spread: 0.02,  pellets: 1, range: 100, color: 0x444a55, reload: 1.1 },
   { id: 'shotgun', name: 'شات‌گان',      auto: false, damage: 11, fireRate: 0.75, mag: 6,  spread: 0.09,  pellets: 9, range: 40,  color: 0x5a3a22, reload: 1.8 },
 ];
+
+export function findEnemyFromObject(object) {
+  let current = object;
+  while (current) {
+    if (current.userData?.enemy) return current.userData.enemy;
+    current = current.parent;
+  }
+  return null;
+}
 
 export class Weapon {
   constructor(camera, scene, getEnemyMeshes) {
@@ -28,6 +39,7 @@ export class Weapon {
 
     this.raycaster = new THREE.Raycaster();
     this.view = new THREE.Group();
+    this.recoveredModels = new Map();
     camera.add(this.view);
 
     this.flash = new THREE.PointLight(0xffcc66, 0, 8);
@@ -36,6 +48,7 @@ export class Weapon {
     this.flashTime = 0;
 
     this.buildViewModel();
+    void this.loadRecoveredModels();
   }
 
   get current() { return this.weapons[this.index]; }
@@ -44,9 +57,69 @@ export class Weapon {
   get reloading() { return this.current.reloading; }
   get name() { return this.current.name; }
 
+  async loadRecoveredModels() {
+    const objectLoader = new OBJLoader();
+    const textureLoader = new THREE.TextureLoader();
+    await Promise.all(Object.entries(RECOVERED_WEAPON_ASSETS).map(async ([weaponId, asset]) => {
+      try {
+        const [model, texture] = await Promise.all([
+          objectLoader.loadAsync(asset.model),
+          textureLoader.loadAsync(asset.texture),
+        ]);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = 4;
+        const material = new THREE.MeshStandardMaterial({
+          map: texture,
+          roughness: 0.62,
+          metalness: 0.22,
+        });
+        model.traverse((object) => {
+          if (!object.isMesh) return;
+          object.material = material;
+          object.castShadow = true;
+          object.receiveShadow = true;
+        });
+
+        // The exported Unity weapons are authored lengthwise along local X.
+        // Fit them to a first-person scale, point them down camera -Z, and
+        // center each model on the same right-hand view-model anchor.
+        model.rotation.set(...asset.rotation);
+        model.updateMatrixWorld(true);
+        const unscaledBounds = new THREE.Box3().setFromObject(model);
+        const unscaledSize = unscaledBounds.getSize(new THREE.Vector3());
+        const longestSide = Math.max(unscaledSize.x, unscaledSize.y, unscaledSize.z);
+        if (!Number.isFinite(longestSide) || longestSide <= 0) {
+          throw new Error('Recovered weapon mesh has no usable geometry.');
+        }
+        model.scale.setScalar(asset.targetLength / longestSide);
+        model.updateMatrixWorld(true);
+        const center = new THREE.Box3().setFromObject(model).getCenter(new THREE.Vector3());
+        model.position.set(
+          asset.position[0] - center.x,
+          asset.position[1] - center.y,
+          asset.position[2] - center.z
+        );
+        model.updateMatrixWorld(true);
+        model.userData.recoveredAssetId = asset.sourceMesh;
+        this.recoveredModels.set(weaponId, model);
+        if (this.current.id === weaponId) this.buildViewModel();
+      } catch (error) {
+        // Keep the low-poly procedural model if a texture/model is unavailable.
+        console.warn(`Could not load recovered ${asset.displayName} view model.`, error);
+      }
+    }));
+  }
+
   buildViewModel() {
     while (this.view.children.length) this.view.remove(this.view.children[0]);
     const w = this.current;
+    const recoveredModel = this.recoveredModels.get(w.id);
+    if (recoveredModel) {
+      this.view.add(recoveredModel.clone(true));
+      this.view.position.set(0, 0, 0);
+      return;
+    }
+
     const mat = new THREE.MeshStandardMaterial({ color: w.color, roughness: 0.6, metalness: 0.3 });
     const body = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.5), mat);
     body.position.set(0.18, -0.18, -0.5);
@@ -160,9 +233,8 @@ export class Weapon {
         let dmg = w.damage * THREE.MathUtils.clamp(1 - (hit.distance - 12) / 45, 0.5, 1);
         // Headshot multiplier (head mesh is tagged userData.part === 'head').
         if (hit.object.userData && hit.object.userData.part === 'head') dmg *= 2;
-        const group = hit.object.parent;
-        if (group && group.userData && group.userData.enemy) {
-          const enemy = group.userData.enemy;
+        const enemy = findEnemyFromObject(hit.object);
+        if (enemy) {
           enemy.takeDamage(dmg);
           if (this.onEnemyHit) this.onEnemyHit(enemy, dmg, hit.point);
           hitSomething = true;

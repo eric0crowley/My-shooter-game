@@ -1,8 +1,12 @@
+import { RECOVERED_AUDIO_ASSETS } from './recoveredAssets.js';
+
 export class SoundEffects {
   constructor() {
     this.context = null;
     this.master = null;
     this.noiseBuffer = null;
+    this.samples = new Map();
+    this.samplesLoading = null;
   }
 
   async unlock() {
@@ -18,6 +22,36 @@ export class SoundEffects {
       for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
     }
     if (this.context.state === 'suspended') await this.context.resume();
+    if (!this.samplesLoading) this.samplesLoading = this.loadRecoveredSamples();
+    return true;
+  }
+
+  async loadRecoveredSamples() {
+    await Promise.all(Object.entries(RECOVERED_AUDIO_ASSETS).map(async ([id, url]) => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const encoded = await response.arrayBuffer();
+        const decoded = await this.context.decodeAudioData(encoded);
+        this.samples.set(id, decoded);
+      } catch (error) {
+        // Synthesized fallbacks below keep audio working if an asset is unavailable.
+        console.warn(`Could not load recovered audio sample ${id}.`, error);
+      }
+    }));
+  }
+
+  playRecoveredSample(id, volume = 0.65) {
+    const buffer = this.samples.get(id);
+    if (!this.context || !this.master || !buffer) return false;
+    const source = this.context.createBufferSource();
+    const gain = this.context.createGain();
+    source.buffer = buffer;
+    source.playbackRate.value = 0.96 + Math.random() * 0.08;
+    gain.gain.setValueAtTime(volume, this.context.currentTime);
+    source.connect(gain);
+    gain.connect(this.master);
+    source.start();
     return true;
   }
 
@@ -60,6 +94,8 @@ export class SoundEffects {
     if (!this.context) return;
     const isShotgun = weaponId === 'shotgun';
     const isPistol = weaponId === 'pistol';
+    const sampleVolume = isShotgun ? 0.52 : (isPistol ? 0.4 : 0.46);
+    if (this.playRecoveredSample(`shot:${weaponId}`, sampleVolume)) return;
     this.tone(isShotgun ? 88 : (isPistol ? 145 : 112), isShotgun ? 0.19 : 0.12, 'sawtooth', isShotgun ? 0.2 : 0.12, isShotgun ? 38 : 62);
     this.noise(isShotgun ? 0.17 : 0.1, isShotgun ? 0.22 : (isPistol ? 0.14 : 0.09), isShotgun ? 1200 : 2600);
   }
@@ -74,7 +110,8 @@ export class SoundEffects {
     this.noise(0.18, 0.045, 420);
   }
 
-  reload() {
+  reload(weaponId = 'rifle') {
+    if (this.playRecoveredSample(`reload:${weaponId}`, 0.7)) return;
     this.tone(420, 0.035, 'square', 0.035, 260);
     window.setTimeout(() => this.tone(620, 0.055, 'square', 0.04, 380), 160);
   }

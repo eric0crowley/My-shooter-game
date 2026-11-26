@@ -1,5 +1,7 @@
 import * as THREE from 'three';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { clamp, resolveCircleBoxes, segmentIntersectsBox } from './collision.js';
+import { RECOVERED_ZOMBIE_ASSET } from './recoveredAssets.js';
 
 const TRAINING_BOT = {
   health: 100,
@@ -53,12 +55,14 @@ export class Enemy {
     this.group = new THREE.Group();
     this.group.userData.enemy = this;
     this.makeModel();
+    if (manager.recoveredZombieTemplate) this.setRecoveredVisual(manager.recoveredZombieTemplate);
     scene.add(this.group);
     this.spawnAt(spawn, stats);
   }
 
   makeModel() {
     const isZombie = this.kind === 'zombie';
+    this.fallbackVisual = new THREE.Group();
     const bodyMaterial = new THREE.MeshStandardMaterial({
       color: isZombie ? 0x62734b : 0xcc4433,
       roughness: 0.78,
@@ -76,7 +80,7 @@ export class Enemy {
     head.position.y = 1.7;
     head.castShadow = true;
     head.userData.part = 'head';
-    this.group.add(body, head);
+    this.fallbackVisual.add(body, head);
     this.head = head;
 
     if (isZombie) {
@@ -96,10 +100,31 @@ export class Enemy {
       const rightEye = leftEye.clone();
       leftEye.position.set(-0.105, 1.73, 0.248);
       rightEye.position.set(0.105, 1.73, 0.248);
-      this.group.add(leftArm, rightArm, leftEye, rightEye);
+      this.fallbackVisual.add(leftArm, rightArm, leftEye, rightEye);
       this.leftArm = leftArm;
       this.rightArm = rightArm;
     }
+    this.group.add(this.fallbackVisual);
+  }
+
+  setRecoveredVisual(template) {
+    if (this.kind !== 'zombie' || this.recoveredVisual || !template) return;
+    const visual = template.clone(true);
+    visual.traverse((object) => {
+      if (!object.isMesh) return;
+      if (object.geometry) object.geometry = object.geometry.clone();
+      if (Array.isArray(object.material)) {
+        object.material = object.material.map((material) => material.clone());
+      } else if (object.material) {
+        object.material = object.material.clone();
+      }
+      object.userData.part = object.name.toLowerCase().includes('head') ? 'head' : 'body';
+      object.castShadow = true;
+      object.receiveShadow = true;
+    });
+    this.recoveredVisual = visual;
+    this.group.add(visual);
+    this.fallbackVisual.visible = false;
   }
 
   spawnAt(pos, stats = {}) {
@@ -249,6 +274,76 @@ export class EnemyManager {
     this.networkClient = false;
     this.onKillEvent = null;
     this.onWaveStart = null;
+    this.recoveredZombieTemplate = null;
+    if (typeof document !== 'undefined') void this.loadRecoveredZombieModel();
+  }
+
+  async loadRecoveredZombieModel() {
+    try {
+      const objectLoader = new OBJLoader();
+      const textureLoader = new THREE.TextureLoader();
+      const [importedModel, texture] = await Promise.all([
+        objectLoader.loadAsync(RECOVERED_ZOMBIE_ASSET.model),
+        textureLoader.loadAsync(RECOVERED_ZOMBIE_ASSET.texture),
+      ]);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = 4;
+      const sourceMesh = importedModel.getObjectByProperty('isMesh', true);
+      if (!sourceMesh) throw new Error('Recovered ZombieC OBJ contains no mesh.');
+
+      importedModel.updateMatrixWorld(true);
+      const sourceBounds = new THREE.Box3().setFromObject(importedModel);
+      const sourceSize = sourceBounds.getSize(new THREE.Vector3());
+      const sourceHeight = sourceSize.y;
+      if (!Number.isFinite(sourceHeight) || sourceHeight <= 0) {
+        throw new Error('Recovered ZombieC mesh has no usable height.');
+      }
+      const material = new THREE.MeshStandardMaterial({
+        map: texture,
+        roughness: 0.9,
+        metalness: 0,
+        alphaTest: 0.45,
+      });
+      importedModel.traverse((object) => {
+        if (!object.isMesh) return;
+        object.material = material;
+        object.userData.part = 'body';
+        object.castShadow = true;
+        object.receiveShadow = true;
+      });
+
+      // OBJ preserves the bind pose but not the rig. Keep a non-rendering head
+      // hit volume so the existing headshot damage behavior still works.
+      const hitboxMaterial = new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0,
+        colorWrite: false,
+        depthWrite: false,
+      });
+      const headHitbox = new THREE.Mesh(
+        new THREE.SphereGeometry(sourceHeight * 0.085, 10, 8),
+        hitboxMaterial
+      );
+      headHitbox.name = 'ZombieC_HeadHitbox';
+      headHitbox.userData.part = 'head';
+      const sourceCenter = sourceBounds.getCenter(new THREE.Vector3());
+      headHitbox.position.set(sourceCenter.x, sourceBounds.min.y + sourceHeight * 0.88, sourceCenter.z);
+      importedModel.add(headHitbox);
+      const model = importedModel;
+      model.scale.setScalar(RECOVERED_ZOMBIE_ASSET.targetHeight / sourceHeight);
+      model.updateMatrixWorld(true);
+      const fittedBounds = new THREE.Box3().setFromObject(model);
+      const fittedCenter = fittedBounds.getCenter(new THREE.Vector3());
+      model.position.set(-fittedCenter.x, -fittedBounds.min.y, -fittedCenter.z);
+      model.userData.recoveredAssetId = RECOVERED_ZOMBIE_ASSET.sourceMesh;
+      model.updateMatrixWorld(true);
+
+      this.recoveredZombieTemplate = model;
+      for (const enemy of this.enemies) enemy.setRecoveredVisual(model);
+    } catch (error) {
+      // Keep the original procedural zombie if browser loading fails.
+      console.warn('Could not load recovered ZombieC character model.', error);
+    }
   }
 
   registerEnemy(enemy) {

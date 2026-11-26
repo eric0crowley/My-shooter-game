@@ -2,7 +2,7 @@
 
 > **تفکیک پروژه‌ها:** برنامهٔ ریشهٔ مخزن یک پروتوتایپ مستقل با **Three.js + Vite + Capacitor** است؛ پروژهٔ Unity بازسازی‌شده از APK اصلی در `unity-reconstruction/` قرار دارد. این دو را با هم اشتباه نگیر.
 
-یک پروتوتایپ شوتر اول‌شخص موبایل‌محور با رابط فارسی، ساخته‌شده با **Three.js + Vite + Capacitor**. این مخزن یک بازی مستقل با کد و هندسهٔ خودش است؛ نام‌ها، دارایی‌ها، نقشه‌ها یا داستان Call of Duty را کپی نمی‌کند. شبه‌کدهای `recovered/apk-beta-native/` سورس قابل‌کامپایل Unity نیستند و در این بازی استفاده نشده‌اند.
+یک پروتوتایپ شوتر اول‌شخص موبایل‌محور با رابط فارسی، ساخته‌شده با **Three.js + Vite + Capacitor**. منطق بازی و آرنای فعلی مستقل‌اند؛ برای جلوگیری از شروع از صفر، حالا سه مدل سلاح، مدل ثابت زامبی و صداهای شلیک/خشابِ استخراج‌شده از APK اصلی هم به‌عنوان دارایی runtime به آن متصل شده‌اند. نگاشت و provenance آن‌ها در [`public/recovered/README.md`](public/recovered/README.md) ثبت شده است. شبه‌کدهای `recovered/apk-beta-native/` سورس قابل‌کامپایل Unity نیستند و در بازی استفاده نشده‌اند.
 
 ## قابلیت‌ها
 
@@ -82,13 +82,17 @@ APK محلی در `android/app/build/outputs/apk/debug/app-debug.apk` ساخته
 - `src/main.js` — صحنه، ورودی، حلقهٔ بازی، منو و جریان LAN
 - `src/World.js` — آرنای تمرین، موانع، نورها، pickupها و محل spawn
 - `src/Player.js` — حرکت، برخورد و سلامتی بازیکن
-- `src/Weapon.js` — سه سلاح و ثبت اصابت
+- `src/Weapon.js` — سه سلاح، مدل‌های recovered و ثبت اصابت
+- `src/SoundEffects.js` — صدای شلیک/خشاب بازیابی‌شده با fallback تولیدی
+- `src/recoveredAssets.js` — نگاشت دارایی‌های APK و شناسه‌های منبع
+- `public/recovered/` — مدل‌های OBJ سلاح و زامبی، تکسچرها و صداهای متصل به بازی
 - `src/EnemyManager.js` — رفتار ربات‌ها، زامبی‌ها، موج‌ها و snapshot شبکه
 - `src/LanTransport.js` — پل JavaScript برای افزونهٔ بومی LAN
 - `android/app/src/main/java/com/rageoffight/game/LanMultiplayerPlugin.java` — میزبان TCP و اتصال مهمان اندروید
 - `src/NetworkPlayers.js` — مدل‌های بازیکن‌های راه‌دور
 - `src/HUD.js` — رابط وضعیت فارسی
 - `test/gameModes.test.js` — آزمون‌های موج، AI و همگام‌سازی LAN
+- `test/recoveredAssets.test.js` — آزمون مسیرها، فرمت و parse شدن دارایی‌های بازیابی‌شده
 
 فایل‌های `recovered/apk-beta-native/` فقط برای بررسی ساختار APK بتا هستند؛ آن‌ها سورس قابل‌کامپایل Unity یا جایگزین سورس این پروتوتایپ نیستند.
 

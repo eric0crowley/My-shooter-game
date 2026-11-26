@@ -108,7 +108,7 @@ weapon.onHit = () => {
   soundEffects.hit();
 };
 weapon.onShot = (id) => soundEffects.shot(id);
-weapon.onReload = () => soundEffects.reload();
+weapon.onReload = (id) => soundEffects.reload(id);
 enemyMgr.onKillEvent = () => soundEffects.tone(680, 0.09, 'triangle', 0.06, 920);
 enemyMgr.onWaveStart = (wave) => soundEffects.waveStart(wave);
 weapon.onEnemyHit = (enemy, amount) => {
